@@ -41,6 +41,35 @@ public class UserService {
 
         return users.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
+    public UserDTO getUserProfileById(Long id, String username) {
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+        User targetUser = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Target user not found"));
+
+        if (currentUser.getRoleCode().equals("ADM")) {
+            return convertToDTO(targetUser);
+        }
+
+        if (currentUser.getRoleCode().equals("MGR")) {
+            if (targetUser.getRoleCode().equals("EMP") && currentUser.getDepartmentId().equals(targetUser.getDepartmentId())) {
+                return convertToDTO(targetUser);
+            } else {
+                throw new RuntimeException("Doctors can only view profiles of patients in their own department");
+            }
+        }
+
+        if (currentUser.getRoleCode().equals("EMP")) {
+            if (!currentUser.getUserId().equals(targetUser.getUserId())) {
+                throw new RuntimeException("Patients can only view their own profile");
+            }
+            return convertToDTO(targetUser);
+        }
+
+        throw new RuntimeException("Unauthorized access");
+    }
+
     public UserDTO updatePatientProfile(String username, UserDTO userDTO) {
         Optional<User> currentUserOptional = userRepository.findByUsername(username);
         if (currentUserOptional.isEmpty()) {

@@ -8,6 +8,10 @@ import com.employee.benhvientu.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -21,39 +25,46 @@ public class AuthService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
+
     public String authenticate(String username, String password) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại!"));
+                .orElseThrow(() -> {
+                    logger.warn("Người dùng '{}' không tồn tại!", username);
+                    return new RuntimeException("Người dùng không tồn tại!");
+                });
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
+            logger.warn("Đăng nhập thất bại cho user '{}': Mật khẩu không chính xác!", username);
             throw new RuntimeException("Mật khẩu không chính xác!");
         }
 
         return jwtUtil.generateToken(user.getUsername(), user.getRoleCode(), user.getUserId());
     }
 
-    // Cập nhật phương thức đăng ký người dùng mới
     public UserDTO registerUser(RegisterRequest request) {
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new RuntimeException("Username đã tồn tại!");
+        // Kiểm tra request không được chứa giá trị null
+        if (request == null || request.getUsername() == null || request.getPassword() == null ||
+                request.getEmail() == null || request.getPhone() == null || request.getCccd() == null ||
+                request.getInsuranceNumber() == null || request.getAddress() == null) {
+            throw new RuntimeException("Thiếu thông tin đăng ký!");
         }
 
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email đã tồn tại!");
+        // Kiểm tra email hợp lệ
+        if (!request.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            throw new RuntimeException("Email không hợp lệ!");
         }
 
-        if (userRepository.findByPhone(request.getPhone()).isPresent()) {
-            throw new RuntimeException("Số điện thoại đã tồn tại!");
+        // Kiểm tra trùng lặp trong một bước để tối ưu truy vấn DB
+        if (userRepository.findByUsername(request.getUsername()).isPresent() ||
+                userRepository.findByEmail(request.getEmail()).isPresent() ||
+                userRepository.findByPhone(request.getPhone()).isPresent() ||
+                userRepository.findByCccd(request.getCccd()).isPresent() ||
+                userRepository.findByInsuranceNumber(request.getInsuranceNumber()).isPresent()) {
+            throw new RuntimeException("Thông tin đăng ký đã tồn tại trong hệ thống!");
         }
 
-        if (userRepository.findByCccd(request.getCccd()).isPresent()) {
-            throw new RuntimeException("Căn cước công dân đã tồn tại!");
-        }
-
-        if (userRepository.findByInsuranceNumber(request.getInsuranceNumber()).isPresent()) {
-            throw new RuntimeException("Số bảo hiểm y tế đã tồn tại!");
-        }
-
+        // Tạo đối tượng User mới
         User user = new User();
         user.setName(request.getName());
         user.setUsername(request.getUsername());
@@ -69,6 +80,7 @@ public class AuthService {
         user.setInsuranceNumber(request.getInsuranceNumber());
         user.setAddress(request.getAddress());
 
+        // Lưu vào database
         userRepository.save(user);
         return convertToDTO(user);
     }
@@ -89,5 +101,4 @@ public class AuthService {
         dto.setUpdatedAt(user.getUpdatedAt());
         return dto;
     }
-
 }

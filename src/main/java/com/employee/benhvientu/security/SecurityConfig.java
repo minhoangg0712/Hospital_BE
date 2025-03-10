@@ -41,6 +41,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll() // Cho phép login không cần xác thực
                         .requestMatchers("/api/patient/profiles").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/patient/update").hasAnyAuthority("ROLE_ADM", "ROLE_EMP", "ROLE_MGR")
+                        .requestMatchers(HttpMethod.POST, "/api/medical-records/create").hasAuthority("ROLE_MGR")
+                        .requestMatchers(HttpMethod.POST, "/api/medical-records/list").hasAuthority("ROLE_MGR")
+                        .requestMatchers(HttpMethod.GET, "/api/medical-records/{id}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/patient/{id}").authenticated()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -4,7 +4,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class UserDTO {
+public class PatientInfoDTO {
     private Long userId;
     private String name;
     private String phone;
@@ -12,35 +12,11 @@ public class UserDTO {
     private String gender;
     private String roleCode;
     private Integer departmentId;
-    private String cccd;  // Căn cước công dân
-    private String insuranceNumber; // Bảo hiểm y tế
-    private String address; // Địa chỉ
+    private String cccd;
+    private String insuranceNumber;
+    private String address;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public String getCccd() {
-        return cccd;
-    }
-
-    public void setCccd(String cccd) {
-        this.cccd = cccd;
-    }
-
-    public String getInsuranceNumber() {
-        return insuranceNumber;
-    }
-
-    public void setInsuranceNumber(String insuranceNumber) {
-        this.insuranceNumber = insuranceNumber;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
 
     public Long getUserId() {
         return userId;
@@ -98,6 +74,30 @@ public class UserDTO {
         this.departmentId = departmentId;
     }
 
+    public String getCccd() {
+        return cccd;
+    }
+
+    public void setCccd(String cccd) {
+        this.cccd = cccd;
+    }
+
+    public String getInsuranceNumber() {
+        return insuranceNumber;
+    }
+
+    public void setInsuranceNumber(String insuranceNumber) {
+        this.insuranceNumber = insuranceNumber;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -114,4 +114,3 @@ public class UserDTO {
         this.updatedAt = updatedAt;
     }
 }
-

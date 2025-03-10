@@ -28,6 +28,12 @@ public class UserController {
         String username = ((UserDetails) authentication.getPrincipal()).getUsername();
         return userService.getPatientProfiles(username);
     }
+    @GetMapping("/{id}")
+    public UserDTO getUserProfileById(@PathVariable Long id, Authentication authentication) {
+        String username = authentication.getName();
+        return userService.getUserProfileById(id, username);
+    }
+
 
     @PutMapping("/update")
     public UserDTO updatePatientProfile(@RequestBody UserDTO userDTO) {
