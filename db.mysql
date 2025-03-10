@@ -1,0 +1,147 @@
+CREATE DATABASE tkxdpm;
+USE tkxdpm;
+
+-- 1. Bảng ROLE (Quản lý phân quyền)
+CREATE TABLE ROLE (
+    role_code VARCHAR(50) PRIMARY KEY,   -- Mã vai trò (ADM, MGR, EMP)
+    role_group VARCHAR(50) NOT NULL,     -- Nhóm vai trò (ROLE)
+    role_name VARCHAR(50) NOT NULL UNIQUE -- Tên vai trò (Admin, Doctor, User)
+);
+
+INSERT INTO ROLE (role_code, role_group, role_name) VALUES
+    ('ADM', 'ROLE', 'Admin'),
+    ('MGR', 'ROLE', 'Doctor'),
+    ('EMP', 'ROLE', 'User');
+
+-- 2. Bảng DEPARTMENT (Phòng ban)
+CREATE TABLE DEPARTMENT (
+    department_id INT AUTO_INCREMENT PRIMARY KEY,
+    department_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- 3. Bảng USER (Người dùng)
+CREATE TABLE USER (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(15) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    gender ENUM('Male', 'Female', 'Other') NOT NULL,
+    role_code VARCHAR(50) NOT NULL,  -- Liên kết với bảng ROLE
+    department_id INT DEFAULT NULL,  -- Chỉ áp dụng cho Doctor
+
+    cccd VARCHAR(20) UNIQUE NOT NULL,  -- Căn cước công dân
+    insurance_number VARCHAR(20) UNIQUE NOT NULL,  -- Bảo hiểm y tế
+    address VARCHAR(255) NOT NULL,  -- Địa chỉ
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (role_code) REFERENCES ROLE(role_code) ON DELETE CASCADE,
+    FOREIGN KEY (department_id) REFERENCES DEPARTMENT(department_id) ON DELETE SET NULL
+);
+
+-- 4. Bảng APPOINTMENTS (Lịch khám bệnh)
+CREATE TABLE APPOINTMENTS (
+    appointment_id INT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id INT NOT NULL,  -- Bác sĩ (USER có role = Doctor)
+    user_id INT NOT NULL,    -- Bệnh nhân (USER có role = User)
+    appointment_date DATETIME NOT NULL,
+    status ENUM('Scheduled', 'Completed', 'Cancelled') NOT NULL DEFAULT 'Scheduled',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE
+);
+
+-- 5. Bảng MEDICINES (Danh sách thuốc)
+CREATE TABLE MEDICINES (
+    medicine_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    unit_price DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE MEDICAL_RECORD_MEDICINES (
+    record_medicine_id INT AUTO_INCREMENT PRIMARY KEY,
+    record_id INT NOT NULL,  -- Liên kết với MEDICAL_RECORDS
+    medicine_id INT NOT NULL,  -- Liên kết với MEDICINES
+    quantity INT NOT NULL CHECK (quantity > 0),
+    FOREIGN KEY (record_id) REFERENCES MEDICAL_RECORDS(record_id) ON DELETE CASCADE,
+    FOREIGN KEY (medicine_id) REFERENCES MEDICINES(medicine_id) ON DELETE CASCADE
+);
+
+
+-- 6. Bảng ORDERS (Đơn thuốc)
+CREATE TABLE ORDERS (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,  -- Người đặt đơn thuốc (USER có role = User)
+    doctor_id INT NOT NULL,  -- Bác sĩ kê đơn (USER có role = Doctor)
+    order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
+    status ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE
+);
+CREATE TABLE MEDICAL_RECORDS (
+    record_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,  -- Liên kết với bệnh nhân (USER có role = EMP)
+    doctor_id INT NOT NULL,  -- Liên kết với bác sĩ (USER có role = MGR)
+    examination_date DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Ngày khám tự động điền
+    reason TEXT,  -- Lý do khám
+    medical_history TEXT,  -- Tiền sử bệnh
+    diagnosis TEXT,  -- Chuẩn đoán
+    test_results TEXT,  -- Kết quả xét nghiệm
+    final_diagnosis TEXT,  -- Chuẩn đoán cuối cùng
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES USER(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE
+);
+
+
+-- 7. Bảng ORDER_DETAILS (Chi tiết đơn thuốc)
+CREATE TABLE ORDER_DETAILS (
+    order_detail_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    medicine_id INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    unit_price DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES ORDERS(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (medicine_id) REFERENCES MEDICINES(medicine_id) ON DELETE CASCADE
+);
+
+-- 8. Bảng PAYMENT (Thanh toán)
+CREATE TABLE PAYMENT (
+    payment_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    user_id INT NOT NULL,
+    payment_method ENUM('COD', 'Online') NOT NULL,
+    transaction_id VARCHAR(100) UNIQUE,
+    payment_status ENUM('Pending', 'Completed', 'Failed') NOT NULL DEFAULT 'Pending',
+    payment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    amount DECIMAL(10,2) NOT NULL CHECK (amount >= 0),
+    FOREIGN KEY (order_id) REFERENCES ORDERS(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE
+);
+
+-- 9. Thêm dữ liệu mẫu
+INSERT INTO DEPARTMENT (department_name) VALUES
+('Cardiology'),  -- department_id = 1
+('Neurology');  -- department_id = 2
+select*from User
+INSERT INTO USER (name, username, password, phone, email, gender, role_code, department_id, cccd, insurance_number, address) VALUES
+('Admin User', 'admin', '$2a$10$hashedpassword', '0987654321', 'admin@example.com', 'Male', 'ADM', NULL, '012345678901', 'INS123456', 'Hà Nội'),
+('Doctor A', 'doctor1', '$2a$10$hashedpassword', '0981111111', 'doctor1@example.com', 'Male', 'MGR', 1, '012345678902', 'INS123457', 'TP.HCM'),
+('Doctor B', 'doctor2', '$2a$10$hashedpassword', '0982222222', 'doctor2@example.com', 'Female', 'MGR', 2, '012345678903', 'INS123458', 'Đà Nẵng'),
+('Patient X', 'patient1', '$2a$10$hashedpassword', '0983333333', 'patient1@example.com', 'Male', 'EMP', NULL, '012345678904', 'INS123459', 'Hải Phòng'),
+('Patient Y', 'patient2', '$2a$10$hashedpassword', '0984444444', 'patient2@example.com', 'Female', 'EMP', NULL, '012345678905', 'INS123460', 'Cần Thơ');
+ALTER TABLE USER ADD COLUMN date_of_birth DATE NULL;
+INSERT INTO MEDICINES (name, description, unit_price) VALUES
+('Paracetamol', 'Giảm đau, hạ sốt', 5.00),
+('Amoxicillin', 'Kháng sinh', 10.00),
+('Aspirin', 'Giảm đau, chống viêm', 7.00);
+
