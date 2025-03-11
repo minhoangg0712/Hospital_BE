@@ -50,10 +50,10 @@ public class MedicalRecordService {
     }
     public MedicalRecordDTO getMedicalRecordById(Long id, String username) {
         User currentUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
 
         MedicalRecord medicalRecord = medicalRecordRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Medical record not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ bệnh án!"));
 
         if ("ADM".equals(currentUser.getRoleCode())) {
             return convertToDTO(medicalRecord);
@@ -62,25 +62,25 @@ public class MedicalRecordService {
         if ("MGR".equals(currentUser.getRoleCode())) {
             if (!medicalRecord.getPatient().getRoleCode().equals("EMP") ||
                     !medicalRecord.getPatient().getDepartmentId().equals(currentUser.getDepartmentId())) {
-                throw new RuntimeException("Bác sĩ chỉ xem được medical records của bệnh nhân cùng department");
+                throw new RuntimeException("Bác sĩ chỉ xem được hồ sơ khám của bệnh nhân cùng department");
             }
             return convertToDTO(medicalRecord);
         }
 
         if ("EMP".equals(currentUser.getRoleCode())) {
             if (!medicalRecord.getPatient().getUserId().equals(currentUser.getUserId())) {
-                throw new RuntimeException("Bệnh nhân chỉ được xem medical records của bản thân");
+                throw new RuntimeException("Bệnh nhân chỉ được xem hồ sơ khám của bản thân");
             }
             return convertToDTO(medicalRecord);
         }
 
-        throw new RuntimeException("Unauthorized access");
+        throw new RuntimeException("Truy cập trái phép!");
     }
 
 
     public List<MedicalRecordDTO> getMedicalRecords(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
 
         List<MedicalRecord> records;
 
@@ -94,7 +94,7 @@ public class MedicalRecordService {
             // Bệnh nhân chỉ có thể xem hồ sơ bệnh án của chính họ
             records = medicalRecordRepository.findByPatient_UserId(user.getUserId());
         } else {
-            throw new RuntimeException("Unauthorized access");
+            throw new RuntimeException("Truy cập trái phép!");
         }
 
         return records.stream()

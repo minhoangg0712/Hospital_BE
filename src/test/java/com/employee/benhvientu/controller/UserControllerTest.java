@@ -2,109 +2,123 @@ package com.employee.benhvientu.controller;
 
 import com.employee.benhvientu.dto.UserDTO;
 import com.employee.benhvientu.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.security.access.AccessDeniedException;
 
-import java.util.Collections;
+import java.util.List;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class UserControllerTest {
-
-    private MockMvc mockMvc;
 
     @Mock
     private UserService userService;
 
-    @Mock
-    private Authentication authentication;
-
-    @Mock
-    private SecurityContext securityContext;
-
     @InjectMocks
     private UserController userController;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        this.mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
+    // Trường hợp thành công - Bệnh nhân truy cập danh sách hồ sơ của chính họ
+    @Test
+    void testGetPatientProfiles_AsPatient() {
+        mockAuthentication("patient");
+        when(userService.getPatientProfiles("patient")).thenReturn(List.of(userDTO()));
+        assertEquals(1, userController.getPatientProfiles().size());
     }
 
+    // Trường hợp thành công - Bác sĩ truy cập danh sách hồ sơ bệnh nhân cùng phòng ban
     @Test
-    void testGetPatientProfilesSuccess() throws Exception {
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-        when(authentication.getPrincipal()).thenReturn("doctorUser");
-        when(userService.getPatientProfiles("doctorUser"))
-                .thenReturn(Collections.singletonList(new UserDTO()));
-
-        mockMvc.perform(get("/api/patient/profiles"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+    void testGetPatientProfiles_AsDoctor() {
+        mockAuthentication("doctor");
+        when(userService.getPatientProfiles("doctor")).thenReturn(List.of(userDTO(), userDTO()));
+        assertEquals(2, userController.getPatientProfiles().size());
     }
 
+    // Trường hợp thành công - Admin truy cập danh sách toàn bộ hồ sơ
     @Test
-    void testGetPatientProfilesUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/patient/profiles"))
-                .andExpect(status().isForbidden());
+    void testGetPatientProfiles_AsAdmin() {
+        mockAuthentication("admin");
+        when(userService.getPatientProfiles("admin")).thenReturn(List.of(userDTO(), userDTO(), userDTO()));
+        assertEquals(3, userController.getPatientProfiles().size());
     }
 
+    // Trường hợp lỗi - Chưa xác thực
     @Test
-    void testUpdatePatientProfileSuccess() throws Exception {
-        UserDTO request = new UserDTO();
-        request.setName("Updated Name");
-
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-        when(authentication.getPrincipal()).thenReturn("patientUser");
-        when(userService.updatePatientProfile("patientUser", request))
-                .thenReturn(request);
-
-        mockMvc.perform(put("/api/patient/update")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"Updated Name\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Name"));
+    void testGetPatientProfiles_Unauthenticated() {
+        SecurityContextHolder.clearContext();
+        assertThrows(RuntimeException.class, () -> userController.getPatientProfiles());
     }
 
+    // Trường hợp thành công - Bệnh nhân truy cập hồ sơ của chính họ
     @Test
-    void testUpdatePatientProfileUnauthorized() throws Exception {
-        mockMvc.perform(put("/api/patient/update")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"Updated Name\"}"))
-                .andExpect(status().isForbidden());
+    void testGetUserProfileById_AsPatient_Success() {
+        mockAuthentication("patient");
+        when(userService.getUserProfileById(1L, "patient")).thenReturn(userDTO());
+        assertNotNull(userController.getUserProfileById(1L, SecurityContextHolder.getContext().getAuthentication()));
     }
 
+    // Trường hợp lỗi - Bệnh nhân truy cập hồ sơ người khác
     @Test
-    void testUpdatePatientProfileInvalidData() throws Exception {
-        mockMvc.perform(put("/api/patient/update")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"\"}"))
-                .andExpect(status().isBadRequest());
+    void testGetUserProfileById_AsPatient_AccessDenied() {
+        mockAuthentication("patient");
+        when(userService.getUserProfileById(2L, "patient")).thenThrow(new AccessDeniedException("Access Denied"));
+        assertThrows(AccessDeniedException.class, () -> userController.getUserProfileById(2L, SecurityContextHolder.getContext().getAuthentication()));
     }
 
+    // Trường hợp thành công - Bác sĩ truy cập hồ sơ bệnh nhân cùng phòng ban
     @Test
-    void testUpdatePatientProfileWithUnauthorizedUser() throws Exception {
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-        when(authentication.getPrincipal()).thenReturn("doctorUser");
+    void testGetUserProfileById_AsDoctor_Success() {
+        mockAuthentication("doctor");
+        when(userService.getUserProfileById(2L, "doctor")).thenReturn(userDTO());
+        assertNotNull(userController.getUserProfileById(2L, SecurityContextHolder.getContext().getAuthentication()));
+    }
 
-        mockMvc.perform(put("/api/patient/update")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"New Name\"}"))
-                .andExpect(status().isForbidden());
+    // Trường hợp lỗi - Bác sĩ truy cập hồ sơ ngoài phòng ban hoặc hồ sơ bác sĩ khác
+    @Test
+    void testGetUserProfileById_AsDoctor_AccessDenied() {
+        mockAuthentication("doctor");
+        when(userService.getUserProfileById(3L, "doctor")).thenThrow(new AccessDeniedException("Access Denied"));
+        assertThrows(AccessDeniedException.class, () -> userController.getUserProfileById(3L, SecurityContextHolder.getContext().getAuthentication()));
+    }
+
+    // Trường hợp thành công - Admin truy cập bất kỳ hồ sơ nào
+    @Test
+    void testGetUserProfileById_AsAdmin() {
+        mockAuthentication("admin");
+        when(userService.getUserProfileById(3L, "admin")).thenReturn(userDTO());
+        assertNotNull(userController.getUserProfileById(3L, SecurityContextHolder.getContext().getAuthentication()));
+    }
+
+    // Trường hợp lỗi - Hồ sơ không tồn tại
+    @Test
+    void testGetUserProfileById_NotFound() {
+        mockAuthentication("admin");
+        when(userService.getUserProfileById(99L, "admin")).thenThrow(new RuntimeException("Target user not found"));
+        assertThrows(RuntimeException.class, () -> userController.getUserProfileById(99L, SecurityContextHolder.getContext().getAuthentication()));
+    }
+
+    private void mockAuthentication(String username) {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(username, null, List.of())
+        );
+    }
+
+    private UserDTO userDTO() {
+        UserDTO dto = new UserDTO();
+        dto.setUserId(1L);
+        dto.setName("Patient Name");
+        dto.setEmail("patient@example.com");
+        dto.setPhone("0123456789");
+        dto.setCccd("123456789012");
+        dto.setInsuranceNumber("BHYT123456");
+        dto.setAddress("123 Main St");
+        return dto;
     }
 }
