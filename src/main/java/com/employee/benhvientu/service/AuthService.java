@@ -1,5 +1,7 @@
 package com.employee.benhvientu.service;
 
+import com.employee.benhvientu.dto.ChangePasswordRequest;
+import com.employee.benhvientu.dto.ForgotPasswordRequest;
 import com.employee.benhvientu.dto.RegisterRequest;
 import com.employee.benhvientu.dto.UserDTO;
 import com.employee.benhvientu.entity.User;
@@ -100,5 +102,65 @@ public class AuthService {
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
         return dto;
+    }
+
+    public void changePassword(String username, ChangePasswordRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        // Kiểm tra mật khẩu hiện tại
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            logger.warn("Đổi mật khẩu thất bại cho user '{}': Mật khẩu hiện tại không chính xác!", username);
+            throw new RuntimeException("Mật khẩu hiện tại không chính xác");
+        }
+
+        // Kiểm tra mật khẩu mới không được trùng với mật khẩu cũ
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new RuntimeException("Mật khẩu mới không được trùng với mật khẩu cũ");
+        }
+
+        // Kiểm tra độ mạnh của mật khẩu mới
+        if (request.getNewPassword().length() < 8) {
+            throw new RuntimeException("Mật khẩu mới phải có ít nhất 8 ký tự");
+        }
+
+        // Cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        
+        logger.info("Đổi mật khẩu thành công cho user '{}'", username);
+    }
+
+    public void forgotPassword(ForgotPasswordRequest request) {
+        // Kiểm tra request
+        if (request.getUsername() == null || request.getEmail() == null || 
+            request.getNewPassword() == null || request.getConfirmPassword() == null) {
+            throw new RuntimeException("Vui lòng điền đầy đủ thông tin");
+        }
+
+        // Kiểm tra mật khẩu mới và xác nhận mật khẩu
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("Mật khẩu mới và xác nhận mật khẩu không khớp");
+        }
+
+        // Tìm user theo username
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
+
+        // Kiểm tra email
+        if (!user.getEmail().equals(request.getEmail())) {
+            throw new RuntimeException("Email không khớp với tài khoản");
+        }
+
+        // Kiểm tra độ mạnh của mật khẩu mới
+        if (request.getNewPassword().length() < 8) {
+            throw new RuntimeException("Mật khẩu mới phải có ít nhất 8 ký tự");
+        }
+
+        // Cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        
+        logger.info("Đặt lại mật khẩu thành công cho user '{}'", request.getUsername());
     }
 }
