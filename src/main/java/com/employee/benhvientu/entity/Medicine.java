@@ -1,27 +1,42 @@
 package com.employee.benhvientu.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
+@Data
 @Table(name = "MEDICINES")
-@Getter
-@Setter
 public class Medicine {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer medicineId;
+    @Column(name = "medicine_id")
+    private Long medicineId;
 
+    @Column(nullable = false, unique = true)
     private String name;
-    private String description;
-    private Double unitPrice;
 
-    public Integer getMedicineId() {
+    private String description;
+
+    @Column(name = "unit_price", nullable = false)
+    private BigDecimal unitPrice;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    // Getters and Setters
+    public Long getMedicineId() {
         return medicineId;
     }
 
-    public void setMedicineId(Integer medicineId) {
+    public void setMedicineId(Long medicineId) {
         this.medicineId = medicineId;
     }
 
@@ -41,11 +56,19 @@ public class Medicine {
         this.description = description;
     }
 
-    public Double getUnitPrice() {
+    public BigDecimal getUnitPrice() {
         return unitPrice;
     }
 
-    public void setUnitPrice(Double unitPrice) {
+    public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

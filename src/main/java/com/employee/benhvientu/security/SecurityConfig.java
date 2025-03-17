@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll() // Cho phép đăng ký không cần xác thực
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll() // Cho phép login không cần xác thực
+                        .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll() // Cho phép quên mật khẩu không cần xác thực
                         .requestMatchers("/api/patient/profiles").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/patient/update").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/medical-records/create").hasAuthority("ROLE_MGR")
