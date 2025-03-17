@@ -13,6 +13,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/patient")
+@CrossOrigin(
+        origins = "http://localhost:4200",
+        allowedHeaders = "*",
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 public class UserController {
 
     @Autowired
@@ -43,7 +47,6 @@ public class UserController {
         String username = authentication.getName();
         return userService.getUserProfileById(id, username);
     }
-
 
     @PutMapping("/update")
     public UserDTO updatePatientProfile(@RequestBody UserDTO userDTO) {
