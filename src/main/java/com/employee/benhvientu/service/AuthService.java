@@ -133,7 +133,7 @@ public class AuthService {
 
     public void forgotPassword(ForgotPasswordRequest request) {
         // Kiểm tra request
-        if (request.getUsername() == null || request.getEmail() == null || 
+        if (request.getUsername() == null ||
             request.getNewPassword() == null || request.getConfirmPassword() == null) {
             throw new RuntimeException("Vui lòng điền đầy đủ thông tin");
         }
@@ -147,14 +147,10 @@ public class AuthService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
 
-        // Kiểm tra email
-        if (!user.getEmail().equals(request.getEmail())) {
-            throw new RuntimeException("Email không khớp với tài khoản");
-        }
 
         // Kiểm tra độ mạnh của mật khẩu mới
-        if (request.getNewPassword().length() < 8) {
-            throw new RuntimeException("Mật khẩu mới phải có ít nhất 8 ký tự");
+        if (request.getNewPassword().length() < 6) {
+            throw new RuntimeException("Mật khẩu mới phải có ít nhất 6 ký tự");
         }
 
         // Cập nhật mật khẩu mới

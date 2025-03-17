@@ -5,7 +5,6 @@ import lombok.Data;
 @Data
 public class ForgotPasswordRequest {
     private String username;
-    private String email;
     private String newPassword;
     private String confirmPassword;
 
@@ -15,14 +14,6 @@ public class ForgotPasswordRequest {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getNewPassword() {

@@ -72,7 +72,7 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        if (request == null || request.getUsername() == null || request.getEmail() == null || 
+        if (request == null || request.getUsername() == null ||
             request.getNewPassword() == null || request.getConfirmPassword() == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng điền đầy đủ thông tin"));
         }
