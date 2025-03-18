@@ -55,10 +55,11 @@ public class UserService {
         }
 
         if (currentUser.getRoleCode().equals("MGR")) {
-            if (targetUser.getRoleCode().equals("EMP") && currentUser.getDepartmentId().equals(targetUser.getDepartmentId())) {
+            if (targetUser.getUserId().equals(currentUser.getUserId()) ||
+                (targetUser.getRoleCode().equals("EMP") && currentUser.getDepartmentId().equals(targetUser.getDepartmentId()))) {
                 return convertToDTO(targetUser);
             } else {
-                throw new RuntimeException("Bác sĩ chỉ được xem hồ sơ của bệnh nhân trong cùng khoa!");
+                throw new RuntimeException("Bác sĩ chỉ được xem hồ sơ của bệnh nhân trong cùng khoa hoặc của chính mình!");
             }
         }
 
@@ -129,7 +130,16 @@ public class UserService {
         return convertToDTO(user);
     }
 
+    public UserDTO getDoctorProfile(String username) {
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng hiện tại!"));
 
+        if (!"MGR".equals(currentUser.getRoleCode())) {
+            throw new RuntimeException("Chỉ có bác sĩ mới có thể xem hồ sơ cá nhân!");
+        }
+
+        return convertToDTO(currentUser);
+    }
 
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();

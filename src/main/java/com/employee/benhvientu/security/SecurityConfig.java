@@ -43,7 +43,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/patient/profiles").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/patient/profile/{id}").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/patient/profile/update").authenticated()
-//                        .requestMatchers(HttpMethod.POST, "/api/patient/profile/create").hasAuthority("ROLE_MGR")
+                        .requestMatchers(HttpMethod.GET, "/api/patient/Doctorprofile").hasAuthority("ROLE_MGR") // Thêm dòng này
                         .requestMatchers(HttpMethod.GET, "/api/medicines").permitAll() // Ai cũng xem được danh sách thuốc
                         .requestMatchers(HttpMethod.POST, "/api/cart/add").hasAnyAuthority("ROLE_EMP", "ROLE_MGR") // Thêm vào giỏ
                         .requestMatchers(HttpMethod.GET, "/api/cart").hasAnyAuthority("ROLE_EMP", "ROLE_MGR") // Xem giỏ hàng

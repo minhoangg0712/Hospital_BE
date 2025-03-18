@@ -66,6 +66,10 @@ public class UserController {
         return userService.updatePatientProfile(username, userDTO);
     }
 
-
+    @GetMapping("/Doctorprofile")
+    public UserDTO getDoctorProfile(Authentication authentication) {
+        String username = authentication.getName();
+        return userService.getDoctorProfile(username);
+    }
 
 }
