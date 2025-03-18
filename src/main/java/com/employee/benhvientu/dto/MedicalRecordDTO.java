@@ -6,30 +6,65 @@ import java.util.List;
 
 @Data
 public class MedicalRecordDTO {
-    private long patientId;
-    private String reason;
-    private PatientInfoDTO patient;
-    private DoctorInfoDTO doctor;
+    private Long recordId;
+    private String patientName;
+    private String gender;
+    private String address;
+    private String insuranceNumber;
+    private String symptoms;
     private String medicalHistory;
+    private String allergies;
     private String diagnosis;
     private String testResults;
-    private String finalDiagnosis;
-    private List<MedicinePrescriptionDTO> medicines;
+    private String prescription;
+    private String notes;
 
-    public long getPatientId() {
-        return patientId;
+    public Long getRecordId() {
+        return recordId;
     }
 
-    public void setPatientId(Long patientId) {
-        this.patientId = patientId;
+    public void setRecordId(Long recordId) {
+        this.recordId = recordId;
     }
 
-    public String getReason() {
-        return reason;
+    public String getPatientName() {
+        return patientName;
     }
 
-    public void setReason(String reason) {
-        this.reason = reason;
+    public void setPatientName(String patientName) {
+        this.patientName = patientName;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getInsuranceNumber() {
+        return insuranceNumber;
+    }
+
+    public void setInsuranceNumber(String insuranceNumber) {
+        this.insuranceNumber = insuranceNumber;
+    }
+
+    public String getSymptoms() {
+        return symptoms;
+    }
+
+    public void setSymptoms(String symptoms) {
+        this.symptoms = symptoms;
     }
 
     public String getMedicalHistory() {
@@ -38,6 +73,14 @@ public class MedicalRecordDTO {
 
     public void setMedicalHistory(String medicalHistory) {
         this.medicalHistory = medicalHistory;
+    }
+
+    public String getAllergies() {
+        return allergies;
+    }
+
+    public void setAllergies(String allergies) {
+        this.allergies = allergies;
     }
 
     public String getDiagnosis() {
@@ -56,35 +99,19 @@ public class MedicalRecordDTO {
         this.testResults = testResults;
     }
 
-    public String getFinalDiagnosis() {
-        return finalDiagnosis;
+    public String getPrescription() {
+        return prescription;
     }
 
-    public void setFinalDiagnosis(String finalDiagnosis) {
-        this.finalDiagnosis = finalDiagnosis;
+    public void setPrescription(String prescription) {
+        this.prescription = prescription;
     }
 
-    public List<MedicinePrescriptionDTO> getMedicines() {
-        return medicines;
+    public String getNotes() {
+        return notes;
     }
 
-    public void setMedicines(List<MedicinePrescriptionDTO> medicines) {
-        this.medicines = medicines;
-    }
-
-    public PatientInfoDTO getPatient() {
-        return patient;
-    }
-
-    public void setPatient(PatientInfoDTO patient) {
-        this.patient = patient;
-    }
-
-    public DoctorInfoDTO getDoctor() {
-        return doctor;
-    }
-
-    public void setDoctor(DoctorInfoDTO doctor) {
-        this.doctor = doctor;
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 }

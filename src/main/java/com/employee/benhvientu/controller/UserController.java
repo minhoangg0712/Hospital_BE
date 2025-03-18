@@ -8,6 +8,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -42,13 +45,14 @@ public class UserController {
 
         return userService.getPatientProfiles(username);
     }
-    @GetMapping("/{id}")
+
+    @GetMapping("/profile/{id}")
     public UserDTO getUserProfileById(@PathVariable Long id, Authentication authentication) {
         String username = authentication.getName();
         return userService.getUserProfileById(id, username);
     }
 
-    @PutMapping("/update")
+    @PutMapping("/profile/update")
     public UserDTO updatePatientProfile(@RequestBody UserDTO userDTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal().equals("anonymousUser")) {
@@ -58,6 +62,10 @@ public class UserController {
         Object principal = authentication.getPrincipal();
         String username = (principal instanceof UserDetails) ? ((UserDetails) principal).getUsername() : principal.toString();
 
+        // Không cần userId trong userDTO
         return userService.updatePatientProfile(username, userDTO);
     }
+
+
+
 }

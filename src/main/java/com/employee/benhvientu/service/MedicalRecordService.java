@@ -21,14 +21,14 @@ public class MedicalRecordService {
     @Autowired
     private UserRepository userRepository;
 
-    public MedicalRecordDTO createMedicalRecord(String doctorUsername, MedicalRecordDTO request) {
+    public MedicalRecordDTO createMedicalRecord(String doctorUsername, Long patientId, MedicalRecordDTO request) {
         User doctor = userRepository.findByUsername(doctorUsername)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ"));
 
-        User patient = userRepository.findById(request.getPatientId())
+        User patient = userRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bệnh nhân"));
 
-        // Kiểm tra quyền của bác sĩ và bệnh nhân
+        // Kiểm tra quyền của bác sĩ
         if (!doctor.getRoleCode().equals("MGR")) {
             throw new RuntimeException("Chỉ có bác sĩ mới có thể tạo hồ sơ bệnh án");
         }
@@ -39,11 +39,13 @@ public class MedicalRecordService {
         MedicalRecord medicalRecord = new MedicalRecord();
         medicalRecord.setDoctor(doctor);
         medicalRecord.setPatient(patient);
-        medicalRecord.setReason(request.getReason());
+        medicalRecord.setSymptoms(request.getSymptoms());
         medicalRecord.setMedicalHistory(request.getMedicalHistory());
+        medicalRecord.setAllergies(request.getAllergies());
         medicalRecord.setDiagnosis(request.getDiagnosis());
         medicalRecord.setTestResults(request.getTestResults());
-        medicalRecord.setFinalDiagnosis(request.getFinalDiagnosis());
+        medicalRecord.setPrescription(request.getPrescription());
+        medicalRecord.setNotes(request.getNotes());
         medicalRecord = medicalRecordRepository.save(medicalRecord);
 
         return convertToDTO(medicalRecord);
@@ -104,16 +106,18 @@ public class MedicalRecordService {
 
     private MedicalRecordDTO convertToDTO(MedicalRecord record) {
         MedicalRecordDTO dto = new MedicalRecordDTO();
-        dto.setPatientId(record.getPatient().getUserId());
-        dto.setReason(record.getReason());
+        dto.setRecordId(record.getRecordId());
+        dto.setPatientName(record.getPatient().getName());
+        dto.setGender(record.getPatient().getGender().name());
+        dto.setAddress(record.getPatient().getAddress());
+        dto.setInsuranceNumber(record.getPatient().getInsuranceNumber());
+        dto.setSymptoms(record.getSymptoms());
         dto.setMedicalHistory(record.getMedicalHistory());
+        dto.setAllergies(record.getAllergies());
         dto.setDiagnosis(record.getDiagnosis());
         dto.setTestResults(record.getTestResults());
-        dto.setFinalDiagnosis(record.getFinalDiagnosis());
-
-        // Convert doctor and patient
-        dto.setPatient(convertToPatientInfo(record.getPatient()));
-        dto.setDoctor(convertToDoctorInfo(record.getDoctor()));
+        dto.setPrescription(record.getPrescription());
+        dto.setNotes(record.getNotes());
 
         return dto;
     }

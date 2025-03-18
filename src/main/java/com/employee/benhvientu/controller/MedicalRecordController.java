@@ -15,10 +15,13 @@ public class MedicalRecordController {
     @Autowired
     private MedicalRecordService medicalRecordService;
 
-    @PostMapping("/create")
-    public MedicalRecordDTO createMedicalRecord(@RequestBody MedicalRecordDTO request, Authentication authentication) {
+    @PostMapping("/create/{patientId}")
+    public MedicalRecordDTO createMedicalRecord(
+            @PathVariable Long patientId,
+            @RequestBody MedicalRecordDTO request,
+            Authentication authentication) {
         String doctorUsername = authentication.getName();
-        return medicalRecordService.createMedicalRecord(doctorUsername, request);
+        return medicalRecordService.createMedicalRecord(doctorUsername, patientId, request);
     }
 
     @GetMapping("/list")

@@ -81,21 +81,12 @@ public class UserService {
         }
 
         User currentUser = currentUserOptional.get();
-        User user = userRepository.findById(userDTO.getUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy hồ sơ!"));
+        User user = currentUser;
 
-        // Kiểm tra quyền hạn
-        if ("EMP".equals(currentUser.getRoleCode()) && !currentUser.getUserId().equals(user.getUserId())) {
-            throw new AccessDeniedException("Bạn không có quyền chỉnh sửa hồ sơ này!");
-        }
-        if ("ADM".equals(currentUser.getRoleCode()) && !"MGR".equals(user.getRoleCode())) {
-            throw new AccessDeniedException("Admin chỉ có thể chỉnh sửa hồ sơ của bác sĩ!");
-        }
-        if ("MGR".equals(currentUser.getRoleCode())) {
-            throw new AccessDeniedException("Bác sĩ không có quyền cập nhật hồ sơ!");
+        if ("ADM".equals(currentUser.getRoleCode())) {
+            throw new AccessDeniedException("Admin không thể tự cập nhật thông tin!");
         }
 
-        // Kiểm tra dữ liệu hợp lệ
         if (userDTO.getName() == null || userDTO.getName().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên không được để trống");
         }
@@ -106,16 +97,18 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số điện thoại không hợp lệ");
         }
 
-        // Kiểm tra nếu CCCD đã tồn tại nhưng không phải của user hiện tại
         Optional<User> existingUserWithCccd = userRepository.findByCccd(userDTO.getCccd());
         if (existingUserWithCccd.isPresent() && !existingUserWithCccd.get().getUserId().equals(user.getUserId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CCCD đã tồn tại! Vui lòng nhập số khác.");
         }
-
-        // Kiểm tra nếu số bảo hiểm y tế đã tồn tại nhưng không phải của user hiện tại
+    
         Optional<User> existingUserWithInsurance = userRepository.findByInsuranceNumber(userDTO.getInsuranceNumber());
         if (existingUserWithInsurance.isPresent() && !existingUserWithInsurance.get().getUserId().equals(user.getUserId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số bảo hiểm y tế đã tồn tại! Vui lòng nhập số khác.");
+        }
+        Optional<User> existingUserWithPhone = userRepository.findByPhone(userDTO.getPhone());
+        if (existingUserWithPhone.isPresent() && !existingUserWithPhone.get().getUserId().equals(user.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số điện thoại đã tồn tại! Vui lòng nhập số khác.");
         }
 
         // Cập nhật thông tin
@@ -125,10 +118,10 @@ public class UserService {
         user.setGender(User.Gender.valueOf(userDTO.getGender()));
         user.setAddress(userDTO.getAddress());
 
-        if (!user.getCccd().equals(userDTO.getCccd())) {
+        if (userDTO.getCccd() != null && !user.getCccd().equals(userDTO.getCccd())) {
             user.setCccd(userDTO.getCccd());
         }
-        if (!user.getInsuranceNumber().equals(userDTO.getInsuranceNumber())) {
+        if (userDTO.getInsuranceNumber() != null && !user.getInsuranceNumber().equals(userDTO.getInsuranceNumber())) {
             user.setInsuranceNumber(userDTO.getInsuranceNumber());
         }
 

@@ -13,27 +13,47 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long userId;
 
     @Column(unique = true, nullable = false)
-    private String username;  // Thêm username
+    private String username;
 
     @Column(nullable = false)
-    private String password;  // Thêm password (hashed)
+    private String password;
 
+    @Column(nullable = true)
     private String name;
+
+    @Column(unique = true, nullable = true)
     private String phone;
+
+    @Column(unique = true, nullable = true)
     private String email;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
     private Gender gender;
 
+    @Column(name = "role_code", nullable = false)
     private String roleCode;
+
+    @Column(name = "department_id", nullable = true)
     private Integer departmentId;
-    private String cccd;  // Căn cước công dân
-    private String insuranceNumber; // Bảo hiểm y tế
-    private String address; // Địa chỉ
+
+    @Column(unique = true, nullable = true)
+    private String cccd;
+
+    @Column(name = "insurance_number", unique = true, nullable = true)
+    private String insuranceNumber;
+
+    @Column(nullable = true)
+    private String address;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     public String getCccd() {
@@ -150,6 +170,17 @@ public class User {
 
     public enum Gender {
         Male, Female, Other
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
 

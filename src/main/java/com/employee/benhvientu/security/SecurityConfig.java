@@ -41,11 +41,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll() // Cho phép login không cần xác thực
                         .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll() // Cho phép quên mật khẩu không cần xác thực
                         .requestMatchers("/api/patient/profiles").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/patient/update").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/medical-records/create").hasAuthority("ROLE_MGR")
+                        .requestMatchers(HttpMethod.GET, "/api/patient/profile/{id}").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/patient/profile/update").authenticated()
+//                        .requestMatchers(HttpMethod.POST, "/api/patient/profile/create").hasAuthority("ROLE_MGR")
+                        .requestMatchers(HttpMethod.GET, "/api/medicines").permitAll() // Ai cũng xem được danh sách thuốc
+                        .requestMatchers(HttpMethod.POST, "/api/cart/add").hasAnyAuthority("ROLE_EMP", "ROLE_MGR") // Thêm vào giỏ
+                        .requestMatchers(HttpMethod.GET, "/api/cart").hasAnyAuthority("ROLE_EMP", "ROLE_MGR") // Xem giỏ hàng
+                        .requestMatchers(HttpMethod.PUT, "/api/cart/**").hasAnyAuthority("ROLE_EMP", "ROLE_MGR") // Cập nhật số lượng
+                        .requestMatchers(HttpMethod.DELETE, "/api/cart/**").hasAnyAuthority("ROLE_EMP", "ROLE_MGR") // Xóa khỏi giỏ
+                        .requestMatchers(HttpMethod.POST, "/api/admin/create-doctor").hasAuthority("ROLE_ADM")
+                        .requestMatchers(HttpMethod.POST, "/api/medical-records/create/{id}").hasAuthority("ROLE_MGR")
                         .requestMatchers(HttpMethod.POST, "/api/medical-records/list").hasAuthority("ROLE_MGR")
                         .requestMatchers(HttpMethod.GET, "/api/medical-records/{id}").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/patient/{id}").authenticated()
                         .requestMatchers(HttpMethod.POST,"/api/chat/session").permitAll()
 
                         .anyRequest().authenticated()

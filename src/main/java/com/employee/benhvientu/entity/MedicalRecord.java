@@ -25,11 +25,13 @@ public class MedicalRecord {
     @Column(nullable = false)
     private LocalDateTime examinationDate = LocalDateTime.now();
 
-    private String reason;
+    private String symptoms;
     private String medicalHistory;
+    private String allergies;
     private String diagnosis;
     private String testResults;
-    private String finalDiagnosis;
+    private String prescription;
+    private String notes;
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
@@ -66,12 +68,12 @@ public class MedicalRecord {
         this.examinationDate = examinationDate;
     }
 
-    public String getReason() {
-        return reason;
+    public String getSymptoms() {
+        return symptoms;
     }
 
-    public void setReason(String reason) {
-        this.reason = reason;
+    public void setSymptoms(String symptoms) {
+        this.symptoms = symptoms;
     }
 
     public String getMedicalHistory() {
@@ -80,6 +82,14 @@ public class MedicalRecord {
 
     public void setMedicalHistory(String medicalHistory) {
         this.medicalHistory = medicalHistory;
+    }
+
+    public String getAllergies() {
+        return allergies;
+    }
+
+    public void setAllergies(String allergies) {
+        this.allergies = allergies;
     }
 
     public String getDiagnosis() {
@@ -98,12 +108,20 @@ public class MedicalRecord {
         this.testResults = testResults;
     }
 
-    public String getFinalDiagnosis() {
-        return finalDiagnosis;
+    public String getPrescription() {
+        return prescription;
     }
 
-    public void setFinalDiagnosis(String finalDiagnosis) {
-        this.finalDiagnosis = finalDiagnosis;
+    public void setPrescription(String prescription) {
+        this.prescription = prescription;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
     public LocalDateTime getCreatedAt() {
