@@ -1,6 +1,7 @@
 package com.employee.benhvientu.service;
 
 import com.employee.benhvientu.dto.CartItemDTO;
+import com.employee.benhvientu.dto.CartResponseDTO;
 import com.employee.benhvientu.entity.CartItem;
 import com.employee.benhvientu.entity.Medicine;
 import com.employee.benhvientu.entity.User;
@@ -59,6 +60,21 @@ public class CartService {
         cartItem = cartItemRepository.save(cartItem);
         return convertToDTO(cartItem);
     }
+    public CartResponseDTO getCartWithSummary(String username, String role) {
+        if (!"ROLE_EMP".equals(role) && !"ROLE_MGR".equals(role)) {
+            throw new AccessDeniedException("Chỉ bệnh nhân và bác sĩ mới được xem giỏ hàng");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        List<CartItemDTO> cartItems = cartItemRepository.findByUser(user)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+
+        return new CartResponseDTO(cartItems);
+    }
 
     public List<CartItemDTO> getCartItems(String username, String role) {
         if (!"ROLE_EMP".equals(role) && !"ROLE_MGR".equals(role)) {
@@ -111,6 +127,7 @@ public class CartService {
         cartItem = cartItemRepository.save(cartItem);
         return convertToDTO(cartItem);
     }
+
 
     private CartItemDTO convertToDTO(CartItem cartItem) {
         CartItemDTO dto = new CartItemDTO();

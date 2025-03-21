@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll() // Cho phép quên mật khẩu không cần xác thực
                         .requestMatchers("/api/patient/profiles").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/patient/profile/{id}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/patient/profile").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/patient/profile/update").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/patient/Doctorprofile").hasAuthority("ROLE_MGR") // Thêm dòng này
                         .requestMatchers(HttpMethod.GET, "/api/medicines").permitAll() // Ai cũng xem được danh sách thuốc

@@ -1,6 +1,7 @@
 package com.employee.benhvientu.controller;
 
 import com.employee.benhvientu.dto.CartItemDTO;
+import com.employee.benhvientu.dto.CartResponseDTO;
 import com.employee.benhvientu.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,20 +29,20 @@ public class CartController {
                 .findFirst()
                 .orElseThrow(() -> new AccessDeniedException("Không có quyền truy cập"))
                 .getAuthority();
-                
+
         return ResponseEntity.ok(cartService.addToCart(username, medicineId, quantity, role));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_EMP', 'ROLE_MGR')")
-    public ResponseEntity<List<CartItemDTO>> getCartItems(Authentication authentication) {
+    public ResponseEntity<CartResponseDTO> getCartItems(Authentication authentication) {
         String username = authentication.getName();
         String role = authentication.getAuthorities().stream()
                 .findFirst()
                 .orElseThrow(() -> new AccessDeniedException("Không có quyền truy cập"))
                 .getAuthority();
-                
-        return ResponseEntity.ok(cartService.getCartItems(username, role));
+
+        return ResponseEntity.ok(cartService.getCartWithSummary(username, role));
     }
 
     @DeleteMapping("/{cartItemId}")
@@ -54,7 +55,7 @@ public class CartController {
                 .findFirst()
                 .orElseThrow(() -> new AccessDeniedException("Không có quyền truy cập"))
                 .getAuthority();
-                
+
         cartService.removeFromCart(username, cartItemId, role);
         return ResponseEntity.ok().build();
     }
