@@ -54,6 +54,16 @@ public class AppointmentService {
         return appointments;
     }
 
+    public List<Appointment> listAppointmentsByDepartment(String doctorUsername) {
+        User doctor = userRepository.findByUsername(doctorUsername)
+                .orElseThrow(() -> new IllegalArgumentException("Doctor not found"));
+
+        Department department = departmentRepository.findById(doctor.getDepartmentId())
+                .orElseThrow(() -> new IllegalArgumentException("Department not found"));
+
+        return appointmentRepository.findByDepartment(department);
+    }
+
     public Appointment updateAppointment(int id, Appointment appointment, String username) {
         Appointment existingAppointment = appointmentRepository.findByAppointmentIdAndUserUsername(id, username);
         if (existingAppointment != null) {

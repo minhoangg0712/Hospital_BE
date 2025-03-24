@@ -33,6 +33,13 @@ public class AppointmentController {
         return ResponseEntity.ok(appointments);
     }
 
+    @GetMapping("/department")
+    public ResponseEntity<List<Appointment>> listAppointmentsByDepartment(Authentication authentication) {
+        String doctorUsername = authentication.getName();
+        List<Appointment> appointments = appointmentService.listAppointmentsByDepartment(doctorUsername);
+        return ResponseEntity.ok(appointments);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Appointment> updateAppointment(@PathVariable int id, @RequestBody Appointment appointment, Authentication authentication) {
         String username = authentication.getName();
