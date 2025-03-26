@@ -31,6 +31,8 @@ public class Appointment {
         return user;
     }
 
+    private String reason;
+
     //    @Getter @Setter
     private Date appointmentDate;
 
@@ -88,5 +90,13 @@ public class Appointment {
 
     public void setDepartment(Department department) {
         this.department = department;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 }
