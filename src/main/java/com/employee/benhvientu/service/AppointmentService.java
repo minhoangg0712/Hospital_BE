@@ -30,8 +30,18 @@ public class AppointmentService {
         Department department = departmentRepository.findById(appointment.getDepartment().getDepartmentId())
                 .orElseThrow(() -> new IllegalArgumentException("Department not found"));
 
+
+        // Check if there is already an appointment at the same time for the user
+        boolean exists = appointmentRepository.existsByUserAndAppointmentDate(user, appointment.getAppointmentDate());
+        if (exists) {
+            throw new IllegalArgumentException("You already have an appointment at this time.");
+        }
+
         appointment.setUser(user);
         appointment.setDepartment(department);
+
+        user.setDepartmentId(appointment.getDepartment().getDepartmentId());
+        userRepository.save(user);
 
         if (!forSelf) {
             if (appointment.getRelativeName() == null || appointment.getRelativeIdCard() == null) {
