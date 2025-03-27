@@ -87,6 +87,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/appointments").hasAuthority("ROLE_EMP")
                         .requestMatchers(HttpMethod.PUT, "/api/appointments/**").hasAuthority("ROLE_EMP")
                         .requestMatchers(HttpMethod.DELETE, "/api/appointments/**").hasAuthority("ROLE_EMP")
+                        .requestMatchers(HttpMethod.GET, "/api/appointments/**").hasAuthority("ROLE_EMP")
                         .requestMatchers(HttpMethod.GET, "api/departments/**").permitAll()
 
                         // Bác sĩ chỉ có thể xem danh sách lịch hẹn
