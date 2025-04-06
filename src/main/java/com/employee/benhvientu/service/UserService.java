@@ -37,8 +37,10 @@ public class UserService {
             users = userRepository.findByRoleCodeAndDepartmentId("EMP", currentUser.getDepartmentId());
         }
         // Nếu là Admin -> Xem được tất cả hồ sơ bệnh nhân và bác sĩ
-        else {
-            users = userRepository.findAll();
+        else if ("ADM".equals(currentUser.getRoleCode())) {
+            users = userRepository.findByRoleCode("MGR");
+        } else {
+            throw new RuntimeException("Không có quyền truy cập!");
         }
 
         return users.stream().map(this::convertToDTO).collect(Collectors.toList());
