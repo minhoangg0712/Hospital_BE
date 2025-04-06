@@ -104,6 +104,40 @@ public class MedicalRecordService {
                 .collect(Collectors.toList());
     }
 
+    public List<MedicalRecordDTO> getMedicalRecordsByPatientId(Long patientId, String username) {
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+        
+        User patient = userRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bệnh nhân!"));
+
+        List<MedicalRecord> records;
+        
+        if ("ADM".equals(currentUser.getRoleCode())) {
+            // Admin có thể xem tất cả hồ sơ bệnh án
+            records = medicalRecordRepository.findByPatient_UserId(patientId);
+        } else if ("MGR".equals(currentUser.getRoleCode())) {
+            // Bác sĩ chỉ có thể xem hồ sơ của bệnh nhân trong cùng khoa
+            if (!patient.getDepartmentId().equals(currentUser.getDepartmentId()) || 
+                !patient.getRoleCode().equals("EMP")) {
+                throw new RuntimeException("Bác sĩ chỉ được xem hồ sơ bệnh nhân trong cùng khoa");
+            }
+            records = medicalRecordRepository.findByPatient_UserId(patientId);
+        } else if ("EMP".equals(currentUser.getRoleCode())) {
+            // Bệnh nhân chỉ có thể xem hồ sơ của chính mình
+            if (!currentUser.getUserId().equals(patientId)) {
+                throw new RuntimeException("Bệnh nhân chỉ được xem hồ sơ của chính mình");
+            }
+            records = medicalRecordRepository.findByPatient_UserId(patientId);
+        } else {
+            throw new RuntimeException("Truy cập trái phép!");
+        }
+
+        return records.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private MedicalRecordDTO convertToDTO(MedicalRecord record) {
         MedicalRecordDTO dto = new MedicalRecordDTO();
         dto.setRecordId(record.getRecordId());

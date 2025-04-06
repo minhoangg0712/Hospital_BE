@@ -35,4 +35,12 @@ public class MedicalRecordController {
         return medicalRecordService.getMedicalRecordById(id, username);
     }
 
+    @GetMapping("/patient/{patientId}")
+    public List<MedicalRecordDTO> getMedicalRecordsByPatientId(
+            @PathVariable Long patientId,
+            Authentication authentication) {
+        String username = authentication.getName();
+        return medicalRecordService.getMedicalRecordsByPatientId(patientId, username);
+    }
+
 }
