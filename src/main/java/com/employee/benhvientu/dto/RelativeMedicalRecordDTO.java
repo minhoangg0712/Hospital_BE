@@ -1,13 +1,11 @@
 package com.employee.benhvientu.dto;
 
 import lombok.Data;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
-public class MedicalRecordDTO {
+public class RelativeMedicalRecordDTO {
     private Long recordId;
-    private String patientName;
+    private String relativeName;
     private String gender;
     private String address;
     private String insuranceNumber;
@@ -27,14 +25,13 @@ public class MedicalRecordDTO {
         this.recordId = recordId;
     }
 
-    public String getPatientName() {
-        return patientName;
+    public String getRelativeName() {
+        return relativeName;
     }
 
-    public void setPatientName(String patientName) {
-        this.patientName = patientName;
+    public void setRelativeName(String relativeName) {
+        this.relativeName = relativeName;
     }
-
 
     public String getGender() {
         return gender;

@@ -1,6 +1,7 @@
 package com.employee.benhvientu.controller;
 
 import com.employee.benhvientu.dto.MedicalRecordDTO;
+import com.employee.benhvientu.dto.RelativeMedicalRecordDTO;
 import com.employee.benhvientu.entity.MedicalRecord;
 import com.employee.benhvientu.service.MedicalRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,16 @@ public class MedicalRecordController {
             Authentication authentication) {
         String doctorUsername = authentication.getName();
         return medicalRecordService.createMedicalRecord(doctorUsername, patientId, request);
+    }
+
+    @PostMapping("/create-relative/{patientId}/{appointmentId}")
+    public RelativeMedicalRecordDTO createRelativeMedicalRecord(
+            @PathVariable Long patientId,
+            @PathVariable Integer appointmentId,
+            @RequestBody MedicalRecordDTO request,
+            Authentication authentication) {
+        String doctorUsername = authentication.getName();
+        return medicalRecordService.createRelativeMedicalRecord(doctorUsername, patientId, appointmentId, request);
     }
 
     @GetMapping("/list")

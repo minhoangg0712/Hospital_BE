@@ -5,12 +5,15 @@ import com.employee.benhvientu.dto.MedicalRecordDTO;
 import com.employee.benhvientu.dto.PatientInfoDTO;
 import com.employee.benhvientu.entity.MedicalRecord;
 import com.employee.benhvientu.entity.User;
+import com.employee.benhvientu.entity.Appointment;
 import com.employee.benhvientu.repository.MedicalRecordRepository;
 import com.employee.benhvientu.repository.UserRepository;
+import com.employee.benhvientu.repository.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.employee.benhvientu.dto.RelativeMedicalRecordDTO;
 
 @Service
 public class MedicalRecordService {
@@ -20,6 +23,9 @@ public class MedicalRecordService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private AppointmentRepository appointmentRepository;
 
     public MedicalRecordDTO createMedicalRecord(String doctorUsername, Long patientId, MedicalRecordDTO request) {
         User doctor = userRepository.findByUsername(doctorUsername)
@@ -50,6 +56,7 @@ public class MedicalRecordService {
 
         return convertToDTO(medicalRecord);
     }
+
     public MedicalRecordDTO getMedicalRecordById(Long id, String username) {
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
@@ -78,7 +85,6 @@ public class MedicalRecordService {
 
         throw new RuntimeException("Truy cập trái phép!");
     }
-
 
     public List<MedicalRecordDTO> getMedicalRecords(String username) {
         User user = userRepository.findByUsername(username)
@@ -136,6 +142,63 @@ public class MedicalRecordService {
         return records.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    public RelativeMedicalRecordDTO createRelativeMedicalRecord(String doctorUsername, Long patientId, Integer appointmentId, MedicalRecordDTO request) {
+        User doctor = userRepository.findByUsername(doctorUsername)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ"));
+
+        User patient = userRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bệnh nhân"));
+
+        // Kiểm tra quyền của bác sĩ
+        if (!doctor.getRoleCode().equals("MGR")) {
+            throw new RuntimeException("Chỉ có bác sĩ mới có thể tạo hồ sơ bệnh án");
+        }
+
+        // Tìm thông tin lịch hẹn của người thân
+        Appointment relativeAppointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn"));
+
+        // Kiểm tra lịch hẹn có phải của người thân không
+        if (relativeAppointment.getRelativeName() == null || relativeAppointment.getRelativeIdCard() == null) {
+            throw new RuntimeException("Lịch hẹn này không phải của người thân");
+        }
+
+        // Kiểm tra lịch hẹn có thuộc về bệnh nhân không
+        if (!relativeAppointment.getUser().getUserId().equals(patientId)) {
+            throw new RuntimeException("Lịch hẹn không thuộc về bệnh nhân này");
+        }
+
+        MedicalRecord medicalRecord = new MedicalRecord();
+        medicalRecord.setDoctor(doctor);
+        medicalRecord.setPatient(patient);
+        medicalRecord.setSymptoms(request.getSymptoms());
+        medicalRecord.setMedicalHistory(request.getMedicalHistory());
+        medicalRecord.setAllergies(request.getAllergies());
+        medicalRecord.setDiagnosis(request.getDiagnosis());
+        medicalRecord.setTestResults(request.getTestResults());
+        medicalRecord.setPrescription(request.getPrescription());
+        medicalRecord.setNotes(request.getNotes());
+
+        medicalRecord = medicalRecordRepository.save(medicalRecord);
+
+        // Tạo RelativeMedicalRecordDTO response
+        RelativeMedicalRecordDTO responseDTO = new RelativeMedicalRecordDTO();
+        responseDTO.setRecordId(medicalRecord.getRecordId());
+        responseDTO.setRelativeName(relativeAppointment.getRelativeName());
+        responseDTO.setGender(patient.getGender().name());
+        responseDTO.setAddress(patient.getAddress());
+        responseDTO.setInsuranceNumber(patient.getInsuranceNumber());
+        responseDTO.setSymptoms(medicalRecord.getSymptoms());
+        responseDTO.setMedicalHistory(medicalRecord.getMedicalHistory());
+        responseDTO.setAllergies(medicalRecord.getAllergies());
+        responseDTO.setDiagnosis(medicalRecord.getDiagnosis());
+        responseDTO.setTestResults(medicalRecord.getTestResults());
+        responseDTO.setPrescription(medicalRecord.getPrescription());
+        responseDTO.setNotes(medicalRecord.getNotes());
+
+        return responseDTO;
     }
 
     private MedicalRecordDTO convertToDTO(MedicalRecord record) {
