@@ -68,4 +68,17 @@ public class CartController {
         String username = authentication.getName();
         return ResponseEntity.ok(cartService.updateQuantity(username, cartItemId, quantity));
     }
+
+    @PostMapping("/checkout")
+    @PreAuthorize("hasAnyAuthority('ROLE_EMP', 'ROLE_MGR')")
+    public ResponseEntity<Void> checkout(Authentication authentication) {
+        String username = authentication.getName();
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .orElseThrow(() -> new AccessDeniedException("Không có quyền truy cập"))
+                .getAuthority();
+
+        cartService.checkout(username, role);
+        return ResponseEntity.ok().build();
+    }
 }

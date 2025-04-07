@@ -11,6 +11,7 @@ import com.employee.benhvientu.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -112,17 +113,17 @@ public class CartService {
         if (quantity <= 0) {
             throw new RuntimeException("Số lượng phải lớn hơn 0");
         }
-        
+
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-                
+
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy item trong giỏ hàng"));
-                
+
         if (!cartItem.getUser().getUserId().equals(user.getUserId())) {
             throw new RuntimeException("Không có quyền cập nhật item này");
         }
-        
+
         cartItem.setQuantity(quantity);
         cartItem = cartItemRepository.save(cartItem);
         return convertToDTO(cartItem);
@@ -139,5 +140,35 @@ public class CartService {
         dto.setTotalPrice(cartItem.getMedicine().getUnitPrice()
                 .multiply(BigDecimal.valueOf(cartItem.getQuantity())));
         return dto;
+    }
+
+    @Transactional
+    public void checkout(String username, String role) {
+        if (!"ROLE_EMP".equals(role) && !"ROLE_MGR".equals(role)) {
+            throw new AccessDeniedException("Chỉ bệnh nhân và bác sĩ mới được thanh toán");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        List<CartItem> cartItems = cartItemRepository.findByUser(user);
+
+        // Kiểm tra số lượng thuốc còn lại
+        for (CartItem item : cartItems) {
+            Medicine medicine = item.getMedicine();
+            if (medicine.getQuantity() < item.getQuantity()) {
+                throw new RuntimeException("Thuốc " + medicine.getName() + " không đủ số lượng trong kho");
+            }
+        }
+
+        // Cập nhật số lượng thuốc và xóa giỏ hàng
+        for (CartItem item : cartItems) {
+            Medicine medicine = item.getMedicine();
+            medicine.setQuantity(medicine.getQuantity() - item.getQuantity());
+            medicineRepository.save(medicine);
+        }
+
+        // Xóa toàn bộ giỏ hàng
+        cartItemRepository.deleteByUser(user);
     }
 }

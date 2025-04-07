@@ -20,6 +20,9 @@ public class Medicine {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "quantity")
+    private Integer quantity;
+
     // Getters và Setters
 
     public Long getMedicineId() {
@@ -60,5 +63,13 @@ public class Medicine {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 }
