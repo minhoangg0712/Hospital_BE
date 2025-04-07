@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.employee.benhvientu.dto.RelativeMedicalRecordDTO;
+import java.util.Date;
 
 @Service
 public class MedicalRecordService {
@@ -113,19 +114,19 @@ public class MedicalRecordService {
     public List<MedicalRecordDTO> getMedicalRecordsByPatientId(Long patientId, String username) {
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
-        
+
         User patient = userRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bệnh nhân!"));
 
         List<MedicalRecord> records;
-        
+
         if ("ADM".equals(currentUser.getRoleCode())) {
             // Admin có thể xem tất cả hồ sơ bệnh án
             records = medicalRecordRepository.findByPatient_UserId(patientId);
         } else if ("MGR".equals(currentUser.getRoleCode())) {
             // Bác sĩ chỉ có thể xem hồ sơ của bệnh nhân trong cùng khoa
-            if (!patient.getDepartmentId().equals(currentUser.getDepartmentId()) || 
-                !patient.getRoleCode().equals("EMP")) {
+            if (!patient.getDepartmentId().equals(currentUser.getDepartmentId()) ||
+                    !patient.getRoleCode().equals("EMP")) {
                 throw new RuntimeException("Bác sĩ chỉ được xem hồ sơ bệnh nhân trong cùng khoa");
             }
             records = medicalRecordRepository.findByPatient_UserId(patientId);
@@ -173,6 +174,7 @@ public class MedicalRecordService {
         MedicalRecord medicalRecord = new MedicalRecord();
         medicalRecord.setDoctor(doctor);
         medicalRecord.setPatient(patient);
+        medicalRecord.setRelativeName(relativeAppointment.getRelativeName());
         medicalRecord.setSymptoms(request.getSymptoms());
         medicalRecord.setMedicalHistory(request.getMedicalHistory());
         medicalRecord.setAllergies(request.getAllergies());
@@ -204,7 +206,14 @@ public class MedicalRecordService {
     private MedicalRecordDTO convertToDTO(MedicalRecord record) {
         MedicalRecordDTO dto = new MedicalRecordDTO();
         dto.setRecordId(record.getRecordId());
-        dto.setPatientName(record.getPatient().getName());
+
+        // Sử dụng tên người thân nếu có, ngược lại sử dụng tên bệnh nhân
+        if (record.getRelativeName() != null && !record.getRelativeName().isEmpty()) {
+            dto.setPatientName(record.getRelativeName());
+        } else {
+            dto.setPatientName(record.getPatient().getName());
+        }
+
         dto.setGender(record.getPatient().getGender().name());
         dto.setAddress(record.getPatient().getAddress());
         dto.setInsuranceNumber(record.getPatient().getInsuranceNumber());

@@ -25,6 +25,8 @@ public class MedicalRecord {
     @Column(nullable = false)
     private LocalDateTime examinationDate = LocalDateTime.now();
 
+    private String relativeName;
+
     private String symptoms;
     private String medicalHistory;
     private String allergies;
@@ -35,6 +37,14 @@ public class MedicalRecord {
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public String getRelativeName() {
+        return relativeName;
+    }
+
+    public void setRelativeName(String relativeName) {
+        this.relativeName = relativeName;
+    }
 
     public Long getRecordId() {
         return recordId;
