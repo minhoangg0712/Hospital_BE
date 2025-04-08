@@ -1,25 +1,20 @@
 CREATE DATABASE tkxdpm;
 USE tkxdpm;
 
--- 1. Bảng ROLE (Quản lý phân quyền)
+-- 1 Bảng ROLE (Quản lý phân quyền)
 CREATE TABLE ROLE (
-    role_code VARCHAR(50) PRIMARY KEY,   -- Mã vai trò (ADM, MGR, EMP)
-    role_group VARCHAR(50) NOT NULL,     -- Nhóm vai trò (ROLE)
-    role_name VARCHAR(50) NOT NULL UNIQUE -- Tên vai trò (Admin, Doctor, User)
+    role_code VARCHAR(50) PRIMARY KEY,
+    role_group VARCHAR(50) NOT NULL,
+    role_name VARCHAR(50) NOT NULL UNIQUE
 );
 
-INSERT INTO ROLE (role_code, role_group, role_name) VALUES
-    ('ADM', 'ROLE', 'Admin'),
-    ('MGR', 'ROLE', 'Doctor'),
-    ('EMP', 'ROLE', 'User');
-
--- 2. Bảng DEPARTMENT (Phòng ban)
+-- 2 Bảng DEPARTMENT (Phòng ban)
 CREATE TABLE DEPARTMENT (
     department_id INT AUTO_INCREMENT PRIMARY KEY,
     department_name VARCHAR(100) NOT NULL UNIQUE
 );
 
--- 3. Bảng USER (Người dùng)
+-- 3️ Bảng USER (Người dùng)
 CREATE TABLE USER (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -28,81 +23,89 @@ CREATE TABLE USER (
     phone VARCHAR(15) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     gender ENUM('Male', 'Female', 'Other') NOT NULL,
-    role_code VARCHAR(50) NOT NULL,  -- Liên kết với bảng ROLE
-    department_id INT DEFAULT NULL,  -- Chỉ áp dụng cho Doctor
-
-    cccd VARCHAR(20) UNIQUE NOT NULL,  -- Căn cước công dân
-    insurance_number VARCHAR(20) UNIQUE NOT NULL,  -- Bảo hiểm y tế
-    address VARCHAR(255) NOT NULL,  -- Địa chỉ
-
+    role_code VARCHAR(50) NOT NULL,
+    department_id INT DEFAULT NULL,
+    cccd VARCHAR(20) UNIQUE NOT NULL,
+    insurance_number VARCHAR(20) UNIQUE NOT NULL,
+    address VARCHAR(255) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (role_code) REFERENCES ROLE(role_code) ON DELETE CASCADE,
     FOREIGN KEY (department_id) REFERENCES DEPARTMENT(department_id) ON DELETE SET NULL
 );
 
--- 4. Bảng APPOINTMENTS (Lịch khám bệnh)
+-- 4️ Bảng APPOINTMENTS (Lịch khám bệnh)
 CREATE TABLE APPOINTMENTS (
     appointment_id INT AUTO_INCREMENT PRIMARY KEY,
-    doctor_id INT NOT NULL,  -- Bác sĩ (USER có role = Doctor)
-    user_id INT NOT NULL,    -- Bệnh nhân (USER có role = User)
+    department_id INT NOT NULL,
+    user_id INT NOT NULL,
     appointment_date DATETIME NOT NULL,
+    reason TEXT NOT NULL,
     status ENUM('Scheduled', 'Completed', 'Cancelled') NOT NULL DEFAULT 'Scheduled',
+    relative_name VARCHAR(255),
+	relative_id_card VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (department_id) REFERENCES DEPARTMENT(department_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE
 );
 
--- 5. Bảng MEDICINES (Danh sách thuốc)
+-- 5️ Bảng MEDICINES (Danh sách thuốc)
 CREATE TABLE MEDICINES (
     medicine_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
     unit_price DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),
+    image_url VARCHAR(1000),
+    quantity INT NOT NULL DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE MEDICAL_RECORD_MEDICINES (
-    record_medicine_id INT AUTO_INCREMENT PRIMARY KEY,
-    record_id INT NOT NULL,  -- Liên kết với MEDICAL_RECORDS
-    medicine_id INT NOT NULL,  -- Liên kết với MEDICINES
-    quantity INT NOT NULL CHECK (quantity > 0),
-    FOREIGN KEY (record_id) REFERENCES MEDICAL_RECORDS(record_id) ON DELETE CASCADE,
-    FOREIGN KEY (medicine_id) REFERENCES MEDICINES(medicine_id) ON DELETE CASCADE
-);
 
-
--- 6. Bảng ORDERS (Đơn thuốc)
+-- 6️ Bảng ORDERS (Đơn thuốc)
 CREATE TABLE ORDERS (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,  -- Người đặt đơn thuốc (USER có role = User)
-    doctor_id INT NOT NULL,  -- Bác sĩ kê đơn (USER có role = Doctor)
+    user_id INT NOT NULL,
+    doctor_id INT NOT NULL,
     order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
     status ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE
+	FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE
 );
+
+-- 7️ Bảng MEDICAL_RECORDS (Hồ sơ bệnh án)
 CREATE TABLE MEDICAL_RECORDS (
-    record_id INT AUTO_INCREMENT PRIMARY KEY,
-    patient_id INT NOT NULL,  -- Liên kết với bệnh nhân (USER có role = EMP)
-    doctor_id INT NOT NULL,  -- Liên kết với bác sĩ (USER có role = MGR)
-    examination_date DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Ngày khám tự động điền
-    reason TEXT,  -- Lý do khám
-    medical_history TEXT,  -- Tiền sử bệnh
-    diagnosis TEXT,  -- Chuẩn đoán
-    test_results TEXT,  -- Kết quả xét nghiệm
-    final_diagnosis TEXT,  -- Chuẩn đoán cuối cùng
+	record_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    examination_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    symptoms TEXT,
+    medical_history TEXT,
+    allergies TEXT,
+    diagnosis TEXT,
+    test_results TEXT,
+    prescription TEXT,
+    notes TEXT,
+    relative_name VARCHAR(100),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES USER(user_id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE
 );
 
+-- 8️ Bảng MEDICAL_RECORD_MEDICINES (Liên kết thuốc với hồ sơ bệnh án)
+CREATE TABLE MEDICAL_RECORD_MEDICINES (
+    record_medicine_id INT AUTO_INCREMENT PRIMARY KEY,
+    record_id INT NOT NULL,
+    medicine_id INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    FOREIGN KEY (record_id) REFERENCES MEDICAL_RECORDS(record_id) ON DELETE CASCADE,
+    FOREIGN KEY (medicine_id) REFERENCES MEDICINES(medicine_id) ON DELETE CASCADE
+);
 
--- 7. Bảng ORDER_DETAILS (Chi tiết đơn thuốc)
+-- 9️ Bảng ORDER_DETAILS (Chi tiết đơn thuốc)
 CREATE TABLE ORDER_DETAILS (
     order_detail_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -114,7 +117,7 @@ CREATE TABLE ORDER_DETAILS (
     FOREIGN KEY (medicine_id) REFERENCES MEDICINES(medicine_id) ON DELETE CASCADE
 );
 
--- 8. Bảng PAYMENT (Thanh toán)
+-- 10 Bảng PAYMENT (Thanh toán)
 CREATE TABLE PAYMENT (
     payment_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -128,20 +131,79 @@ CREATE TABLE PAYMENT (
     FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE
 );
 
--- 9. Thêm dữ liệu mẫu
+CREATE TABLE PREFERRED_DOCTORS (
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    selected_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (patient_id, doctor_id),
+    FOREIGN KEY (patient_id) REFERENCES USER(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE
+);
+
+-- 12 Bảng CART_ITEMS (Giỏ hàng)
+CREATE TABLE CART_ITEMS (
+    cart_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    medicine_id INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (medicine_id) REFERENCES MEDICINES(medicine_id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------------------------------
+
+
 INSERT INTO DEPARTMENT (department_name) VALUES
-('Cardiology'),  -- department_id = 1
-('Neurology');  -- department_id = 2
-select*from User
+('Khoa tim mạch'),  -- Tim mạch
+('Khoa thần kinh'),    -- Thần kinh
+('Khoa nhi'),   -- Nhi Khoa
+('Khoa da liễu'),  -- Da liễu
+('Khoa phục hồi chức năng'),  -- Phục hồi chức năng
+('Khoa dinh dưỡng'); -- Dinh dưỡng
+
+INSERT INTO ROLE (role_code, role_group, role_name) VALUES
+('ADM', 'ADMIN', 'Administrator'),
+('MGR', 'DOCTOR', 'Doctor'),
+('EMP', 'PATIENT', 'Patient');
+
 INSERT INTO USER (name, username, password, phone, email, gender, role_code, department_id, cccd, insurance_number, address) VALUES
 ('Admin User', 'admin', '$2a$10$hashedpassword', '0987654321', 'admin@example.com', 'Male', 'ADM', NULL, '012345678901', 'INS123456', 'Hà Nội'),
 ('Doctor A', 'doctor1', '$2a$10$hashedpassword', '0981111111', 'doctor1@example.com', 'Male', 'MGR', 1, '012345678902', 'INS123457', 'TP.HCM'),
 ('Doctor B', 'doctor2', '$2a$10$hashedpassword', '0982222222', 'doctor2@example.com', 'Female', 'MGR', 2, '012345678903', 'INS123458', 'Đà Nẵng'),
-('Patient X', 'patient1', '$2a$10$hashedpassword', '0983333333', 'patient1@example.com', 'Male', 'EMP', NULL, '012345678904', 'INS123459', 'Hải Phòng'),
-('Patient Y', 'patient2', '$2a$10$hashedpassword', '0984444444', 'patient2@example.com', 'Female', 'EMP', NULL, '012345678905', 'INS123460', 'Cần Thơ');
-ALTER TABLE USER ADD COLUMN date_of_birth DATE NULL;
-INSERT INTO MEDICINES (name, description, unit_price) VALUES
-('Paracetamol', 'Giảm đau, hạ sốt', 5.00),
-('Amoxicillin', 'Kháng sinh', 10.00),
-('Aspirin', 'Giảm đau, chống viêm', 7.00);
+('Patient X', 'patient1', '$2a$10$hashedpassword', '0983333333', 'patient1@example.com', 'Male', 'EMP', NULL, '012345678904', 'INS123459', 'Hải Phòng');
 
+INSERT INTO MEDICINES (name, description, unit_price, image_url, quantity) VALUES
+('Aspirin Cardio', 'Chống kết tập tiểu cầu, phòng ngừa nhồi máu cơ tim.', 50000, 'https://vnras.com/drug/wp-content/uploads/2023/12/thuoc-thao-duoc-tri-ho.jpg'),
+('Metformin (Glucophage)', 'Điều trị tiểu đường type 2.', 120000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/IMG_1363_8965617dac.jpg'),
+('Salbutamol (Ventolin)', 'Giãn phế quản, điều trị hen suyễn, COPD.', 80000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/ventolin_1bfe952cff.jpg'),
+('Celecoxib (Celebrex)', 'Giảm đau, kháng viêm, điều trị viêm khớp.', 60000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/CELE_327986f579.jpg'),
+('Alendronate (Fosamax Plus)', 'Điều trị loãng xương, phòng gãy xương.', 155000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/1_daf75c1e46.jpg'),
+('Omeprazole (Losec)', 'Điều trị viêm loét dạ dày, trào ngược thực quản.', 32000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/IMG_1874_d7a893c364.jpg'),
+('Ranitidine (Zantac)', 'Giảm tiết acid dạ dày, hỗ trợ điều trị viêm loét.', 280000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/00006271_001109310a.jpg'),
+('Co-Diovan (Hydrochlorothiazide)', 'Thuốc lợi tiểu, điều trị tăng huyết áp.', 150000, 'https://icpc1hn.work/NHATHUOC/File/DownloadImageProduct?uPharmaID=0&Token=&ProductID=TH02329&TypeIm=10436&Ratio=1200'),
+('Diazepam (Valium)', 'An thần, giảm co giật, hỗ trợ điều trị lo âu.', 65000, 'https://cdn.youmed.vn/tin-tuc/wp-content/uploads/2021/05/diazepam-5-mg.jpg'),
+('Levothyroxine (Euthyrox)', 'Điều trị suy giáp.', 180000, 'https://www.vinmec.com/static/uploads/20230112_145509_916552_Euthyrox_max_1800x1800_jpg_117132b598.jpg'),
+('Plavix (Clopidogrel)', 'Giảm nguy cơ thành lập máu đông, huyết khối.', 155000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/Untitled_1_11572e80a1.jpg'),
+('Methotrexate Belmed', 'Điều trị viêm khớp dạng thấp, vảy nến.', 97000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/IMG_6141_eed835d35d.jpg'),
+('Gabapentin (Neurontin)', 'Chống co giật hoặc động kinh, có tác dụng điều trị đau thần kinh.', 70000, 'https://cdn.youmed.vn/tin-tuc/wp-content/uploads/2020/04/neurontin-300-mg.jpg'),
+('Amoxicillin-Clavulanate (Augmentin)', 'Kháng sinh phổ rộng, điều trị nhiễm khuẩn.', 450000, 'https://bvdaihoccoso2.com.vn/attachs/augmentin-1g-0_1686625628.jpg'),
+('Oseltamivir (Tamiflu)', 'Điều trị cúm A, cúm B.', 95000, 'https://nhathuocaz.com.vn/wp-content/uploads/2020/10/Thuoc-Tamiflu-dieu-tri-benh-cum.jpg'),
+('Montelukast (Singulair)', 'Điều trị viêm mũi dị ứng, hen phế quản.', 145000, 'https://benh.vn/wp-content/uploads/2023/10/singulair-thuoc.jpg'),
+('Tobramycin (Tobrex)', 'Kháng sinh nhỏ mắt, điều trị viêm nhiễm mắt.', 49000, 'https://cdn.youmed.vn/tin-tuc/wp-content/uploads/2022/12/thuoc-nho-mat-tobrex.jpg'),
+('Brimonidine (Alphagan)', 'Điều trị tăng nhãn áp, hạ nhãn áp.', 72000, 'https://www.vinmec.com/static/uploads/20221020_012222_463155_Alphagan_P_max_1800x1800_jpg_6f13d61d0e.jpg'),
+('Novadex (Tamoxifen)', 'Điều trị ung thư vú phụ thuộc hormone.', 850000, 'https://tamanhhospital.vn/wp-content/uploads/2023/08/thuoc-tamoxifen.jpg'),
+('Warfarin', 'Chống đông máu, phòng ngừa huyết khối.', 96000, 'https://caodangyduochcm.vn/images/files/caodangyduochcm.vn/thuoc-warfarin-1.png'),
+('Ivermectin', 'Điều trị nhiễm ký sinh trùng, giun sán.', 98000, 'https://bvnghean.vn/wp-content/uploads/Shutterstock_1996222034.webp'),
+('Lyrica (Pregabalin)', 'Điều trị đau thần kinh, động kinh cục bộ.', 78000, 'https://medias.watsons.com.ph/publishing/WTCPH-10050642-front-zoom.jpg?version=1721929918'),
+('Diflucan (Fluconazole)', 'Điều trị nhiễm nấm miệng, nấm âm đạo.', 240000, 'https://bizweb.dktcdn.net/thumb/large/100/265/220/products/diflucan-150mg.jpg?v=1512900269773'),
+('Atorvastatin (Lipitor)', 'Giảm cholesterol, phòng ngừa xơ vữa động mạch.', 75000, 'https://trungsoncare.com/images/detailed/10/3_5efi-12.png');
+
+select * from user;
+select * from medical_records;
+select * from cart_items;
+select * from payment;
+SELECT * FROM DEPARTMENT;
+select * from appointments;
+select * from medicines;
