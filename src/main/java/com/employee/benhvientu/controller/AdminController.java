@@ -37,4 +37,22 @@ public class AdminController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PostMapping("/create-assistant")
+    @PreAuthorize("hasRole('ADM')")
+    public ResponseEntity<?> createAssistantAccount(@RequestBody CreateDoctorRequest request) {
+        try {
+            if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Username không được để trống"));
+            }
+            if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Password không được để trống"));
+            }
+            
+            Map<String, String> result = adminService.createAssistantAccount(request);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 } 

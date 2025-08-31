@@ -30,7 +30,6 @@ public class AppointmentService {
         Department department = departmentRepository.findById(appointment.getDepartment().getDepartmentId())
                 .orElseThrow(() -> new IllegalArgumentException("Department not found"));
 
-
         // Check if there is already an appointment at the same time for the user
         boolean exists = appointmentRepository.existsByUserAndAppointmentDate(user, appointment.getAppointmentDate());
         if (exists) {
@@ -39,6 +38,9 @@ public class AppointmentService {
 
         appointment.setUser(user);
         appointment.setDepartment(department);
+        
+        // Thay đổi: Set status PENDING thay vì Scheduled
+        appointment.setStatus(Appointment.STATUS_PENDING);
 
         user.setDepartmentId(appointment.getDepartment().getDepartmentId());
         userRepository.save(user);
@@ -64,7 +66,20 @@ public class AppointmentService {
         return appointments;
     }
 
+    // Thay đổi: Chỉ trả về lịch hẹn đã được xác nhận (CONFIRMED)
     public List<Appointment> listAppointmentsByDepartment(String doctorUsername) {
+        User doctor = userRepository.findByUsername(doctorUsername)
+                .orElseThrow(() -> new IllegalArgumentException("Doctor not found"));
+
+        Department department = departmentRepository.findById(doctor.getDepartmentId())
+                .orElseThrow(() -> new IllegalArgumentException("Department not found"));
+
+        // Chỉ trả về lịch hẹn có status CONFIRMED và thuộc về bác sĩ này
+        return appointmentRepository.findByDoctorUserIdAndStatus(doctor.getUserId().intValue(), Appointment.STATUS_CONFIRMED);
+    }
+
+    // Thêm method mới: Lấy tất cả lịch hẹn trong khoa (cho phụ tá)
+    public List<Appointment> listAllAppointmentsInDepartment(String doctorUsername) {
         User doctor = userRepository.findByUsername(doctorUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Doctor not found"));
 

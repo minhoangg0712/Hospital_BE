@@ -82,19 +82,24 @@ public class SecurityConfig {
 
                         // Các endpoint cho admin và manager
                         .requestMatchers(HttpMethod.POST, "/api/admin/create-doctor").hasAuthority("ROLE_ADM")
+                        .requestMatchers(HttpMethod.POST, "/api/admin/create-assistant").hasAuthority("ROLE_ADM")
                         .requestMatchers(HttpMethod.POST, "/api/medical-records/create/{id}").hasAuthority("ROLE_MGR")
                         .requestMatchers(HttpMethod.POST, "/api/medical-records/list").hasAuthority("ROLE_MGR")
 
+                        // Phân quyền cho AssistantController (Phụ tá)
+                        .requestMatchers("/api/assistant/**").hasAuthority("ROLE_AST")
+
                         // Phân quyền cho AppointmentController
+                        // Bác sĩ xem lịch hẹn theo khoa
+                        .requestMatchers(HttpMethod.GET, "/api/appointments/department").hasAuthority("ROLE_MGR")
+
+                        // Bệnh nhân tạo/cập nhật/xóa/xem lịch hẹn của chính mình
                         .requestMatchers(HttpMethod.POST, "/api/appointments").hasAuthority("ROLE_EMP")
                         .requestMatchers(HttpMethod.PUT, "/api/appointments/**").hasAuthority("ROLE_EMP")
                         .requestMatchers(HttpMethod.DELETE, "/api/appointments/**").hasAuthority("ROLE_EMP")
-                        .requestMatchers(HttpMethod.GET, "/api/appointments/**").hasAuthority("ROLE_EMP")
-                        .requestMatchers(HttpMethod.GET, "api/departments/**").permitAll()
-
-                        // Bác sĩ chỉ có thể xem danh sách lịch hẹn
-                        .requestMatchers(HttpMethod.GET, "/api/appointments").hasAuthority("ROLE_MGR")
-                        .requestMatchers(HttpMethod.GET, "/api/appointments/department").hasAuthority("ROLE_MGR")
+                        .requestMatchers(HttpMethod.GET, "/api/appointments").hasAuthority("ROLE_EMP")
+                        .requestMatchers(HttpMethod.GET, "/api/appointments/*").hasAuthority("ROLE_EMP")
+                        .requestMatchers(HttpMethod.GET, "/api/departments/**").permitAll()
 
                         .anyRequest().authenticated()
                 )

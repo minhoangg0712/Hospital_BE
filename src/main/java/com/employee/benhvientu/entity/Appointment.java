@@ -15,26 +15,82 @@ public class Appointment {
 
     @ManyToOne
     @JoinColumn(name = "department_id", nullable = false)
-//    @Getter @Setter
     private Department department;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-//    @Getter @Setter
     private User user;
 
-    public void setUser(User user) {
-        this.user = user;
+    // Thêm trường doctor_id
+    @ManyToOne
+    @JoinColumn(name = "doctor_id", nullable = true)
+    private User doctor;
+
+    private String reason;
+
+    private Date appointmentDate;
+
+    // Thay đổi: Sử dụng String thay vì Enum để linh hoạt hơn
+    private String status;
+
+    private String relativeName;
+
+    private String relativeIdCard;
+
+    // Thêm trường confirmed_by
+    @ManyToOne
+    @JoinColumn(name = "confirmed_by", nullable = true)
+    private User confirmedBy;
+
+    // Thêm trường confirmed_at
+    private Date confirmedAt;
+
+    // Constants cho trạng thái lịch hẹn
+    public static final String STATUS_PENDING = "PENDING";
+    public static final String STATUS_CONFIRMED = "CONFIRMED";
+    public static final String STATUS_COMPLETED = "COMPLETED";
+    public static final String STATUS_CANCELLED = "CANCELLED";
+
+    // Getters và Setters
+    public int getAppointmentId() {
+        return appointmentId;
+    }
+
+    public void setAppointmentId(int appointmentId) {
+        this.appointmentId = appointmentId;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 
     public User getUser() {
         return user;
     }
 
-    private String reason;
+    public void setUser(User user) {
+        this.user = user;
+    }
 
-    //    @Getter @Setter
-    private Date appointmentDate;
+    public User getDoctor() {
+        return doctor;
+    }
+
+    public void setDoctor(User doctor) {
+        this.doctor = doctor;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
 
     public Date getAppointmentDate() {
         return appointmentDate;
@@ -44,9 +100,6 @@ public class Appointment {
         this.appointmentDate = appointmentDate;
     }
 
-    //    @Getter @Setter
-    private String status;
-
     public String getStatus() {
         return status;
     }
@@ -54,9 +107,6 @@ public class Appointment {
     public void setStatus(String status) {
         this.status = status;
     }
-
-    //    @Getter @Setter
-    private String relativeName;
 
     public String getRelativeName() {
         return relativeName;
@@ -66,9 +116,6 @@ public class Appointment {
         this.relativeName = relativeName;
     }
 
-    //    @Getter @Setter
-    private String relativeIdCard;
-
     public String getRelativeIdCard() {
         return relativeIdCard;
     }
@@ -77,26 +124,19 @@ public class Appointment {
         this.relativeIdCard = relativeIdCard;
     }
 
-    public int getAppointmentId() {
-        return appointmentId;
+    public User getConfirmedBy() {
+        return confirmedBy;
     }
 
-    public void setAppointmentId(int appointmentId) {
-        this.appointmentId = appointmentId;
-    }
-    public Department getDepartment() {
-        return department;
+    public void setConfirmedBy(User confirmedBy) {
+        this.confirmedBy = confirmedBy;
     }
 
-    public void setDepartment(Department department) {
-        this.department = department;
+    public Date getConfirmedAt() {
+        return confirmedAt;
     }
 
-    public String getReason() {
-        return reason;
-    }
-
-    public void setReason(String reason) {
-        this.reason = reason;
+    public void setConfirmedAt(Date confirmedAt) {
+        this.confirmedAt = confirmedAt;
     }
 }

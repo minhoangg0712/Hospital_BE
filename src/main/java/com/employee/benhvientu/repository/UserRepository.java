@@ -18,7 +18,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRoleCode(String roleCode);
     List<User> findByRoleCodeAndDepartmentId(String roleCode, Integer departmentId);
     List<User> findByDepartmentId(Integer departmentId); // Thêm phương thức này
-
+    
+    // Thêm method mới cho AssistantService
+    List<User> findByDepartmentIdAndRoleCode(Integer departmentId, String roleCode);
 }
 
 

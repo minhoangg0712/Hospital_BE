@@ -57,6 +57,45 @@ public class AdminService {
         );
     }
 
+    public Map<String, String> createAssistantAccount(CreateDoctorRequest request) {
+        // Kiểm tra username đã tồn tại chưa
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Username đã tồn tại trong hệ thống");
+        }
+
+        // Tạo tài khoản phụ tá mới với thông tin cơ bản
+        User newAssistant = new User();
+        newAssistant.setUsername(request.getUsername());
+        newAssistant.setPassword(passwordEncoder.encode(request.getPassword()));
+        newAssistant.setRoleCode("AST"); // Set role là phụ tá
+
+        // Thiết lập departmentId từ request
+        newAssistant.setDepartmentId(request.getDepartmentId());
+
+        // Tạo số điện thoại tạm thời duy nhất
+        String tempPhone = generateUniqueTempPhone();
+
+        // Đặt giá trị mặc định cho các trường bắt buộc
+        newAssistant.setName("Assistant_" + request.getUsername()); // Tên tạm thời
+        newAssistant.setPhone(tempPhone); // Số điện thoại tạm thời
+        newAssistant.setEmail(request.getUsername() + "@temp.com"); // Email tạm thời
+        newAssistant.setAddress("Chưa cập nhật"); // Địa chỉ tạm thời
+        newAssistant.setCccd("TEMP" + System.currentTimeMillis()); // CCCD tạm thời
+        newAssistant.setInsuranceNumber("INS" + System.currentTimeMillis()); // Số bảo hiểm tạm thời
+        newAssistant.setGender(User.Gender.Other); // Giới tính mặc định
+        newAssistant.setCreatedAt(LocalDateTime.now());
+        newAssistant.setUpdatedAt(LocalDateTime.now());
+
+        // Lưu vào database
+        userRepository.save(newAssistant);
+
+        return Map.of(
+                "message", "Tạo tài khoản phụ tá thành công",
+                "username", request.getUsername(),
+                "departmentId", request.getDepartmentId() != null ? request.getDepartmentId().toString() : "Không có"
+        );
+    }
+
     private String generateUniqueTempPhone() {
         String tempPhone;
         do {

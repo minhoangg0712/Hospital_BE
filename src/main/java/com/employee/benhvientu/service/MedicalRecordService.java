@@ -39,8 +39,23 @@ public class MedicalRecordService {
         if (!doctor.getRoleCode().equals("MGR")) {
             throw new RuntimeException("Chỉ có bác sĩ mới có thể tạo hồ sơ bệnh án");
         }
-        if (!doctor.getDepartmentId().equals(patient.getDepartmentId()) || !patient.getRoleCode().equals("EMP")) {
-            throw new RuntimeException("Bác sĩ chỉ có thể tạo hồ sơ cho bệnh nhân trong cùng một khoa");
+
+        // Tìm lịch hẹn đã được xác nhận giữa bác sĩ và bệnh nhân này
+        List<Appointment> confirmedAppointments = appointmentRepository.findByDoctorUserIdAndUserUserIdAndStatus(
+                doctor.getUserId().intValue(), 
+                patientId.intValue(), 
+                "CONFIRMED"
+        );
+
+        if (confirmedAppointments.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy lịch hẹn đã xác nhận giữa bác sĩ và bệnh nhân này. " +
+                    "Vui lòng đảm bảo lịch hẹn đã được phụ tá xác nhận và gán cho bác sĩ.");
+        }
+
+        // Kiểm tra xem bác sĩ có thuộc khoa của lịch hẹn không
+        Appointment appointment = confirmedAppointments.get(0); // Lấy lịch hẹn đầu tiên
+        if (!doctor.getDepartmentId().equals(appointment.getDepartment().getDepartmentId())) {
+            throw new RuntimeException("Bác sĩ không thuộc khoa của lịch hẹn này");
         }
 
         MedicalRecord medicalRecord = new MedicalRecord();
@@ -169,6 +184,21 @@ public class MedicalRecordService {
         // Kiểm tra lịch hẹn có thuộc về bệnh nhân không
         if (!relativeAppointment.getUser().getUserId().equals(patientId)) {
             throw new RuntimeException("Lịch hẹn không thuộc về bệnh nhân này");
+        }
+
+        // Kiểm tra lịch hẹn đã được xác nhận chưa
+        if (!"CONFIRMED".equals(relativeAppointment.getStatus())) {
+            throw new RuntimeException("Lịch hẹn chưa được xác nhận. Vui lòng đợi phụ tá xác nhận và gán bác sĩ.");
+        }
+
+        // Kiểm tra bác sĩ có được gán cho lịch hẹn này không
+        if (relativeAppointment.getDoctor() == null || !relativeAppointment.getDoctor().getUserId().equals(doctor.getUserId())) {
+            throw new RuntimeException("Bác sĩ chưa được gán cho lịch hẹn này. Vui lòng đợi phụ tá gán bác sĩ.");
+        }
+
+        // Kiểm tra xem bác sĩ có thuộc khoa của lịch hẹn không
+        if (!doctor.getDepartmentId().equals(relativeAppointment.getDepartment().getDepartmentId())) {
+            throw new RuntimeException("Bác sĩ không thuộc khoa của lịch hẹn này");
         }
 
         MedicalRecord medicalRecord = new MedicalRecord();
