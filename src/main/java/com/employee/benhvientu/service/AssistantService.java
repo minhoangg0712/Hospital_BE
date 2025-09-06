@@ -39,7 +39,7 @@ public class AssistantService {
 
     // Lấy lịch làm việc của bác sĩ
     public List<Appointment> getDoctorSchedule(Integer doctorId) {
-        return appointmentRepository.findByDoctorUserIdAndStatus(
+        return appointmentRepository.findByDoctor_UserIdAndStatus(
                 doctorId, 
                 Appointment.STATUS_CONFIRMED
         );

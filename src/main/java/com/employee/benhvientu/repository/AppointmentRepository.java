@@ -19,10 +19,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     // Thêm các method mới cho AssistantService
     // Sửa: Sử dụng department.departmentId thay vì departmentId
     List<Appointment> findByDepartment_DepartmentIdAndStatus(Integer departmentId, String status);
-    List<Appointment> findByDoctorUserIdAndStatus(Integer doctorId, String status);
+    List<Appointment> findByDoctor_UserIdAndStatus(Integer doctorId, String status);
     List<Appointment> findByDepartment_DepartmentId(Integer departmentId);
     List<Appointment> findByStatus(String status);
     
     // Tìm lịch hẹn đã xác nhận giữa bác sĩ và bệnh nhân cụ thể
-    List<Appointment> findByDoctorUserIdAndUserUserIdAndStatus(Integer doctorId, Integer patientId, String status);
+    List<Appointment> findByDoctor_UserIdAndUser_UserIdAndStatus(Integer doctorId, Integer patientId, String status);
 }

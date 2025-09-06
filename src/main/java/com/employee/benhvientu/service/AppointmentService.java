@@ -75,7 +75,7 @@ public class AppointmentService {
                 .orElseThrow(() -> new IllegalArgumentException("Department not found"));
 
         // Chỉ trả về lịch hẹn có status CONFIRMED và thuộc về bác sĩ này
-        return appointmentRepository.findByDoctorUserIdAndStatus(doctor.getUserId().intValue(), Appointment.STATUS_CONFIRMED);
+        return appointmentRepository.findByDoctor_UserIdAndStatus(doctor.getUserId().intValue(), Appointment.STATUS_CONFIRMED);
     }
 
     // Thêm method mới: Lấy tất cả lịch hẹn trong khoa (cho phụ tá)

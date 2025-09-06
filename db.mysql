@@ -1,5 +1,6 @@
-CREATE DATABASE tkxdpm;
-USE tkxdpm;
+-- Database hoàn chỉnh cho hệ thống bệnh viện với role ASSISTANT
+CREATE DATABASE tt;
+USE tt;
 
 -- 1 Bảng ROLE (Quản lý phân quyền)
 CREATE TABLE ROLE (
@@ -14,7 +15,7 @@ CREATE TABLE DEPARTMENT (
     department_name VARCHAR(100) NOT NULL UNIQUE
 );
 
--- 3️ Bảng USER (Người dùng)
+-- 3 Bảng USER (Người dùng)
 CREATE TABLE USER (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -34,23 +35,28 @@ CREATE TABLE USER (
     FOREIGN KEY (department_id) REFERENCES DEPARTMENT(department_id) ON DELETE SET NULL
 );
 
--- 4️ Bảng APPOINTMENTS (Lịch khám bệnh)
+-- 4 Bảng APPOINTMENTS (Lịch khám bệnh) - Đã cập nhật để hỗ trợ ASSISTANT
 CREATE TABLE APPOINTMENTS (
     appointment_id INT AUTO_INCREMENT PRIMARY KEY,
     department_id INT NOT NULL,
     user_id INT NOT NULL,
+    doctor_id INT DEFAULT NULL,           -- Thêm: ID của bác sĩ được gán
+    confirmed_by INT DEFAULT NULL,       -- Thêm: ID của phụ tá xác nhận
+    confirmed_at DATETIME DEFAULT NULL,  -- Thêm: Thời gian xác nhận
     appointment_date DATETIME NOT NULL,
     reason TEXT NOT NULL,
-    status ENUM('Scheduled', 'Completed', 'Cancelled') NOT NULL DEFAULT 'Scheduled',
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',  -- Thay đổi: Từ ENUM sang VARCHAR
     relative_name VARCHAR(255),
-	relative_id_card VARCHAR(255),
+    relative_id_card VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (department_id) REFERENCES DEPARTMENT(department_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (confirmed_by) REFERENCES USER(user_id) ON DELETE SET NULL
 );
 
--- 5️ Bảng MEDICINES (Danh sách thuốc)
+-- 5 Bảng MEDICINES (Danh sách thuốc)
 CREATE TABLE MEDICINES (
     medicine_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
@@ -61,7 +67,7 @@ CREATE TABLE MEDICINES (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6️ Bảng ORDERS (Đơn thuốc)
+-- 6 Bảng ORDERS (Đơn thuốc)
 CREATE TABLE ORDERS (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -72,12 +78,12 @@ CREATE TABLE ORDERS (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
-	FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE
+    FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE
 );
 
--- 7️ Bảng MEDICAL_RECORDS (Hồ sơ bệnh án)
+-- 7 Bảng MEDICAL_RECORDS (Hồ sơ bệnh án)
 CREATE TABLE MEDICAL_RECORDS (
-	record_id INT AUTO_INCREMENT PRIMARY KEY,
+    record_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
     doctor_id INT NOT NULL,
     examination_date DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -95,7 +101,7 @@ CREATE TABLE MEDICAL_RECORDS (
     FOREIGN KEY (doctor_id) REFERENCES USER(user_id) ON DELETE CASCADE
 );
 
--- 8️ Bảng MEDICAL_RECORD_MEDICINES (Liên kết thuốc với hồ sơ bệnh án)
+-- 8 Bảng MEDICAL_RECORD_MEDICINES (Liên kết thuốc với hồ sơ bệnh án)
 CREATE TABLE MEDICAL_RECORD_MEDICINES (
     record_medicine_id INT AUTO_INCREMENT PRIMARY KEY,
     record_id INT NOT NULL,
@@ -105,7 +111,7 @@ CREATE TABLE MEDICAL_RECORD_MEDICINES (
     FOREIGN KEY (medicine_id) REFERENCES MEDICINES(medicine_id) ON DELETE CASCADE
 );
 
--- 9️ Bảng ORDER_DETAILS (Chi tiết đơn thuốc)
+-- 9 Bảng ORDER_DETAILS (Chi tiết đơn thuốc)
 CREATE TABLE ORDER_DETAILS (
     order_detail_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -131,6 +137,7 @@ CREATE TABLE PAYMENT (
     FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE
 );
 
+-- 11 Bảng PREFERRED_DOCTORS (Bác sĩ ưa thích)
 CREATE TABLE PREFERRED_DOCTORS (
     patient_id INT NOT NULL,
     doctor_id INT NOT NULL,
@@ -153,57 +160,58 @@ CREATE TABLE CART_ITEMS (
 );
 
 -- ------------------------------------------------------------------------------------
+-- INSERT DỮ LIỆU MẪU
+-- ------------------------------------------------------------------------------------
 
-
+-- Thêm các khoa
 INSERT INTO DEPARTMENT (department_name) VALUES
-('Khoa tim mạch'),  -- Tim mạch
-('Khoa thần kinh'),    -- Thần kinh
-('Khoa nhi'),   -- Nhi Khoa
-('Khoa da liễu'),  -- Da liễu
-('Khoa phục hồi chức năng'),  -- Phục hồi chức năng
-('Khoa dinh dưỡng'); -- Dinh dưỡng
+('Khoa tim mạch'),
+('Khoa thần kinh'),
+('Khoa nhi'),
+('Khoa da liễu'),
+('Khoa phục hồi chức năng'),
+('Khoa dinh dưỡng');
 
+-- Thêm các role (bao gồm cả ASSISTANT)
 INSERT INTO ROLE (role_code, role_group, role_name) VALUES
 ('ADM', 'ADMIN', 'Administrator'),
 ('MGR', 'DOCTOR', 'Doctor'),
-('EMP', 'PATIENT', 'Patient');
+('EMP', 'PATIENT', 'Patient'),
+('AST', 'ASSISTANT', 'Assistant');
 
+-- Thêm người dùng mẫu
 INSERT INTO USER (name, username, password, phone, email, gender, role_code, department_id, cccd, insurance_number, address) VALUES
 ('Admin User', 'admin', '$2a$10$hashedpassword', '0987654321', 'admin@example.com', 'Male', 'ADM', NULL, '012345678901', 'INS123456', 'Hà Nội'),
 ('Doctor A', 'doctor1', '$2a$10$hashedpassword', '0981111111', 'doctor1@example.com', 'Male', 'MGR', 1, '012345678902', 'INS123457', 'TP.HCM'),
 ('Doctor B', 'doctor2', '$2a$10$hashedpassword', '0982222222', 'doctor2@example.com', 'Female', 'MGR', 2, '012345678903', 'INS123458', 'Đà Nẵng'),
-('Patient X', 'patient1', '$2a$10$hashedpassword', '0983333333', 'patient1@example.com', 'Male', 'EMP', NULL, '012345678904', 'INS123459', 'Hải Phòng');
+('Patient X', 'patient1', '$2a$10$hashedpassword', '0983333333', 'patient1@example.com', 'Male', 'EMP', NULL, '012345678904', 'INS123459', 'Hải Phòng'),
+('Assistant A', 'assistant1', '$2a$10$hashedpassword', '0984444444', 'assistant1@example.com', 'Female', 'AST', 1, '012345678905', 'INS123460', 'Hà Nội'),
+('Assistant B', 'assistant2', '$2a$10$hashedpassword', '0985555555', 'assistant2@example.com', 'Male', 'AST', 2, '012345678906', 'INS123461', 'TP.HCM');
 
+-- Thêm thuốc mẫu
 INSERT INTO MEDICINES (name, description, unit_price, image_url, quantity) VALUES
-('Aspirin Cardio', 'Chống kết tập tiểu cầu, phòng ngừa nhồi máu cơ tim.', 50000, 'https://vnras.com/drug/wp-content/uploads/2023/12/thuoc-thao-duoc-tri-ho.jpg'),
-('Metformin (Glucophage)', 'Điều trị tiểu đường type 2.', 120000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/IMG_1363_8965617dac.jpg'),
-('Salbutamol (Ventolin)', 'Giãn phế quản, điều trị hen suyễn, COPD.', 80000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/ventolin_1bfe952cff.jpg'),
-('Celecoxib (Celebrex)', 'Giảm đau, kháng viêm, điều trị viêm khớp.', 60000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/CELE_327986f579.jpg'),
-('Alendronate (Fosamax Plus)', 'Điều trị loãng xương, phòng gãy xương.', 155000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/1_daf75c1e46.jpg'),
-('Omeprazole (Losec)', 'Điều trị viêm loét dạ dày, trào ngược thực quản.', 32000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/IMG_1874_d7a893c364.jpg'),
-('Ranitidine (Zantac)', 'Giảm tiết acid dạ dày, hỗ trợ điều trị viêm loét.', 280000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/00006271_001109310a.jpg'),
-('Co-Diovan (Hydrochlorothiazide)', 'Thuốc lợi tiểu, điều trị tăng huyết áp.', 150000, 'https://icpc1hn.work/NHATHUOC/File/DownloadImageProduct?uPharmaID=0&Token=&ProductID=TH02329&TypeIm=10436&Ratio=1200'),
-('Diazepam (Valium)', 'An thần, giảm co giật, hỗ trợ điều trị lo âu.', 65000, 'https://cdn.youmed.vn/tin-tuc/wp-content/uploads/2021/05/diazepam-5-mg.jpg'),
-('Levothyroxine (Euthyrox)', 'Điều trị suy giáp.', 180000, 'https://www.vinmec.com/static/uploads/20230112_145509_916552_Euthyrox_max_1800x1800_jpg_117132b598.jpg'),
-('Plavix (Clopidogrel)', 'Giảm nguy cơ thành lập máu đông, huyết khối.', 155000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/Untitled_1_11572e80a1.jpg'),
-('Methotrexate Belmed', 'Điều trị viêm khớp dạng thấp, vảy nến.', 97000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/IMG_6141_eed835d35d.jpg'),
-('Gabapentin (Neurontin)', 'Chống co giật hoặc động kinh, có tác dụng điều trị đau thần kinh.', 70000, 'https://cdn.youmed.vn/tin-tuc/wp-content/uploads/2020/04/neurontin-300-mg.jpg'),
-('Amoxicillin-Clavulanate (Augmentin)', 'Kháng sinh phổ rộng, điều trị nhiễm khuẩn.', 450000, 'https://bvdaihoccoso2.com.vn/attachs/augmentin-1g-0_1686625628.jpg'),
-('Oseltamivir (Tamiflu)', 'Điều trị cúm A, cúm B.', 95000, 'https://nhathuocaz.com.vn/wp-content/uploads/2020/10/Thuoc-Tamiflu-dieu-tri-benh-cum.jpg'),
-('Montelukast (Singulair)', 'Điều trị viêm mũi dị ứng, hen phế quản.', 145000, 'https://benh.vn/wp-content/uploads/2023/10/singulair-thuoc.jpg'),
-('Tobramycin (Tobrex)', 'Kháng sinh nhỏ mắt, điều trị viêm nhiễm mắt.', 49000, 'https://cdn.youmed.vn/tin-tuc/wp-content/uploads/2022/12/thuoc-nho-mat-tobrex.jpg'),
-('Brimonidine (Alphagan)', 'Điều trị tăng nhãn áp, hạ nhãn áp.', 72000, 'https://www.vinmec.com/static/uploads/20221020_012222_463155_Alphagan_P_max_1800x1800_jpg_6f13d61d0e.jpg'),
-('Novadex (Tamoxifen)', 'Điều trị ung thư vú phụ thuộc hormone.', 850000, 'https://tamanhhospital.vn/wp-content/uploads/2023/08/thuoc-tamoxifen.jpg'),
-('Warfarin', 'Chống đông máu, phòng ngừa huyết khối.', 96000, 'https://caodangyduochcm.vn/images/files/caodangyduochcm.vn/thuoc-warfarin-1.png'),
-('Ivermectin', 'Điều trị nhiễm ký sinh trùng, giun sán.', 98000, 'https://bvnghean.vn/wp-content/uploads/Shutterstock_1996222034.webp'),
-('Lyrica (Pregabalin)', 'Điều trị đau thần kinh, động kinh cục bộ.', 78000, 'https://medias.watsons.com.ph/publishing/WTCPH-10050642-front-zoom.jpg?version=1721929918'),
-('Diflucan (Fluconazole)', 'Điều trị nhiễm nấm miệng, nấm âm đạo.', 240000, 'https://bizweb.dktcdn.net/thumb/large/100/265/220/products/diflucan-150mg.jpg?v=1512900269773'),
-('Atorvastatin (Lipitor)', 'Giảm cholesterol, phòng ngừa xơ vữa động mạch.', 75000, 'https://trungsoncare.com/images/detailed/10/3_5efi-12.png');
+('Aspirin Cardio', 'Chống kết tập tiểu cầu, phòng ngừa nhồi máu cơ tim.', 50000, 'https://vnras.com/drug/wp-content/uploads/2023/12/thuoc-thao-duoc-tri-ho.jpg',100),
+('Metformin (Glucophage)', 'Điều trị tiểu đường type 2.', 120000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/IMG_1363_8965617dac.jpg',100),
+('Salbutamol (Ventolin)', 'Giãn phế quản, điều trị hen suyễn, COPD.', 80000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/ventolin_1bfe952cff.jpg',200),
+('Celecoxib (Celebrex)', 'Giảm đau, kháng viêm, điều trị viêm khớp.', 60000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/IMG_6141_eed835d35d.jpg',200),
+('Alendronate (Fosamax Plus)', 'Điều trị loãng xương, phòng gãy xương.', 155000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/1_daf75c1e46.jpg',150),
+('Omeprazole (Losec)', 'Điều trị viêm loét dạ dày, trào ngược thực quản.', 32000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/IMG_1874_d7a893c364.jpg',300),
+('Ranitidine (Zantac)', 'Giảm tiết acid dạ dày, hỗ trợ điều trị viêm loét.', 280000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/00006271_001109310a.jpg',300),
+('Co-Diovan (Hydrochlorothiazide)', 'Thuốc lợi tiểu, điều trị tăng huyết áp.', 150000, 'https://icpc1hn.work/NHATHUOC/File/DownloadImageProduct?uPharmaID=0&Token=&ProductID=TH02329&TypeIm=10436&Ratio=1200',180),
+('Diazepam (Valium)', 'An thần, giảm co giật, hỗ trợ điều trị lo âu.', 65000, 'https://cdn.youmed.vn/tin-tuc/wp-content/uploads/2021/05/diazepam-5-mg.jpg',120),
+('Levothyroxine (Euthyrox)', 'Điều trị suy giáp.', 180000, 'https://www.vinmec.com/static/uploads/20230112_145509_916552_Euthyrox_max_1800x1800_jpg_117132b598.jpg',200),
+('Plavix (Clopidogrel)', 'Giảm nguy cơ thành lập máu đông, huyết khối.', 155000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/Untitled_1_11572e80a1.jpg',220),
+('Methotrexate Belmed', 'Điều trị viêm khớp dạng thấp, vảy nến.', 97000, 'https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/IMG_6141_eed835d35d.jpg',150),
+('Gabapentin (Neurontin)', 'Chống co giật hoặc động kinh, có tác dụng điều trị đau thần kinh.', 70000, 'https://cdn.youmed.vn/tin-tuc/wp-content/uploads/2020/04/neurontin-300-mg.jpg',160),
+('Amoxicillin-Clavulanate (Augmentin)', 'Kháng sinh phổ rộng, điều trị nhiễm khuẩn.', 450000, 'https://bvdaihoccoso2.com.vn/attachs/augmentin-1g-0_1686625628.jpg',200),
+('Oseltamivir (Tamiflu)', 'Điều trị cúm A, cúm B.', 95000, 'https://nhathuocaz.com.vn/wp-content/uploads/2020/10/Thuoc-Tamiflu-dieu-tri-benh-cum.jpg',180),
+('Montelukast (Singulair)', 'Điều trị viêm mũi dị ứng, hen phế quản.', 145000, 'https://benh.vn/wp-content/uploads/2023/10/singulair-thuoc.jpg',170),
+('Tobramycin (Tobrex)', 'Kháng sinh nhỏ mắt, điều trị viêm nhiễm mắt.', 49000, 'https://cdn.youmed.vn/tin-tuc/wp-content/uploads/2022/12/thuoc-nho-mat-tobrex.jpg',140),
+('Brimonidine (Alphagan)', 'Điều trị tăng nhãn áp, hạ nhãn áp.', 72000, 'https://www.vinmec.com/static/uploads/20221020_012222_463155_Alphagan_P_max_1800x1800_jpg_6f13d61d0e.jpg',130),
+('Novadex (Tamoxifen)', 'Điều trị ung thư vú phụ thuộc hormone.', 850000, 'https://tamanhhospital.vn/wp-content/uploads/2023/08/thuoc-tamoxifen.jpg',120),
+('Warfarin', 'Chống đông máu, phòng ngừa huyết khối.', 96000, 'https://caodangyduochcm.vn/images/files/caodangyduochcm.vn/thuoc-warfarin-1.png',150),
+('Ivermectin', 'Điều trị nhiễm ký sinh trùng, giun sán.', 98000, 'https://bvnghean.vn/wp-content/uploads/Shutterstock_1996222034.webp',200),
+('Lyrica (Pregabalin)', 'Điều trị đau thần kinh, động kinh cục bộ.', 78000, 'https://medias.watsons.com.ph/publishing/WTCPH-10050642-front-zoom.jpg?version=1721929918',150),
+('Diflucan (Fluconazole)', 'Điều trị nhiễm nấm miệng, nấm âm đạo.', 240000, 'https://bizweb.dktcdn.net/thumb/large/100/265/220/products/diflucan-150mg.jpg?v=1512900269773',170),
+('Atorvastatin (Lipitor)', 'Giảm cholesterol, phòng ngừa xơ vữa động mạch.', 75000, 'https://trungsoncare.com/images/detailed/10/3_5efi-12.png',200);
 
-select * from user;
-select * from medical_records;
-select * from cart_items;
-select * from payment;
-SELECT * FROM DEPARTMENT;
-select * from appointments;
-select * from medicines;
