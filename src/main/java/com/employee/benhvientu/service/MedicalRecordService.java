@@ -41,7 +41,7 @@ public class MedicalRecordService {
         }
 
         // Tìm lịch hẹn đã được xác nhận giữa bác sĩ và bệnh nhân này
-        List<Appointment> confirmedAppointments = appointmentRepository.findByDoctorUserIdAndUserUserIdAndStatus(
+        List<Appointment> confirmedAppointments = appointmentRepository.findByDoctor_UserIdAndUser_UserIdAndStatus(
                 doctor.getUserId().intValue(), 
                 patientId.intValue(), 
                 "CONFIRMED"
