@@ -127,6 +127,7 @@ CREATE TABLE ORDER_DETAILS (
 -- 10 Bảng PAYMENT (Thanh toán)
 CREATE TABLE PAYMENT (
     payment_id INT AUTO_INCREMENT PRIMARY KEY,
+    payos_order_code VARCHAR(100) UNIQUE,
     order_id INT NOT NULL,
     user_id INT NOT NULL,
     payment_method ENUM('COD', 'Online') NOT NULL,
