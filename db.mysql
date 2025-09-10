@@ -70,6 +70,7 @@ CREATE TABLE MEDICINES (
 -- 6 Bảng ORDERS (Đơn thuốc)
 CREATE TABLE ORDERS (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
+    payos_order_code VARCHAR(100) UNIQUE,
     user_id INT NOT NULL,
     doctor_id INT NOT NULL,
     order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
