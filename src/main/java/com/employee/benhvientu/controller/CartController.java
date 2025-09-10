@@ -9,8 +9,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import vn.payos.type.CheckoutResponseData;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/cart")
@@ -71,14 +73,19 @@ public class CartController {
 
     @PostMapping("/checkout")
     @PreAuthorize("hasAnyAuthority('ROLE_EMP', 'ROLE_MGR')")
-    public ResponseEntity<Void> checkout(Authentication authentication) {
+    public ResponseEntity<Map<String, Object>> checkout(Authentication authentication) throws Exception {
         String username = authentication.getName();
         String role = authentication.getAuthorities().stream()
                 .findFirst()
                 .orElseThrow(() -> new AccessDeniedException("Không có quyền truy cập"))
                 .getAuthority();
 
-        cartService.checkout(username, role);
-        return ResponseEntity.ok().build();
+        CheckoutResponseData checkoutData = cartService.checkout(username, role);
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("orderId", checkoutData.getOrderCode());
+        responseData.put("checkoutUrl", checkoutData.getCheckoutUrl());
+        responseData.put("paymentLinkId", checkoutData.getPaymentLinkId());
+        return ResponseEntity.ok(responseData);
+
     }
 }
