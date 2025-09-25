@@ -4,11 +4,13 @@ import com.employee.benhvientu.dto.CartItemDTO;
 import com.employee.benhvientu.dto.CartResponseDTO;
 import com.employee.benhvientu.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import vn.payos.PayOS;
 import vn.payos.type.CheckoutResponseData;
 
 import java.util.HashMap;
@@ -19,6 +21,8 @@ import java.util.Map;
 public class CartController {
     @Autowired
     private CartService cartService;
+    @Autowired
+    private PayOS payOS;
 
     @PostMapping("/add")
     @PreAuthorize("hasAnyAuthority('ROLE_EMP', 'ROLE_MGR')")
@@ -72,7 +76,7 @@ public class CartController {
     }
 
     @PostMapping("/checkout")
-    @PreAuthorize("hasAnyAuthority('ROLE_EMP', 'ROLE_MGR')")
+    @PreAuthorize("hasAnyAuthority('EMP', 'MGR')")
     public ResponseEntity<Map<String, Object>> checkout(Authentication authentication) throws Exception {
         String username = authentication.getName();
         String role = authentication.getAuthorities().stream()
@@ -87,5 +91,22 @@ public class CartController {
         responseData.put("paymentLinkId", checkoutData.getPaymentLinkId());
         return ResponseEntity.ok(responseData);
 
+    }
+
+    @PostMapping("/confirm-webhook")
+    public ResponseEntity<Object> confirmWebhook(@RequestBody Map<String, String> requestBody) {
+        try {
+            String webhookUrl = payOS.confirmWebhook(requestBody.get("webhookUrl"));
+            return ResponseEntity.ok(Map.of(
+                    "data", webhookUrl,
+                    "message", "Webhook confirmed successfully",
+                    "status", HttpStatus.OK.value()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "message", e.getMessage(),
+                    "status", HttpStatus.BAD_REQUEST.value()
+            ));
+        }
     }
 }

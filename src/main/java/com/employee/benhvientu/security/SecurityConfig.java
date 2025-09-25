@@ -90,7 +90,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/medical-records/{id}").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/medical-records/create-relative/{patientId}/{appointmentId}").hasAuthority("ROLE_MGR")
                         .requestMatchers(HttpMethod.GET, "/api/medical-records/patient/{id}").authenticated()
-//
+                        .requestMatchers(HttpMethod.POST, "/api/cart/confirm-webhook").permitAll()
+
                         // Các endpoint cho giỏ hàng
                         .requestMatchers(HttpMethod.POST, "/api/cart/add").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/cart").authenticated()
